@@ -1,0 +1,35 @@
+query PoolHourDatas($startTime: Int!, $endTime: Int!, $first: Int!, $skip: Int!) {
+  poolHourDatas(
+    first: $first
+    skip: $skip
+    where: {periodStartUnix_gte: $startTime, periodStartUnix_lt: $endTime}
+    orderBy: periodStartUnix
+    orderDirection: asc
+  ) {
+    id
+    periodStartUnix
+    pool {
+      id
+      token0 { id symbol name decimals }
+      token1 { id symbol name decimals }
+      feeTier
+    }
+    liquidity
+    sqrtPrice
+    token0Price
+    token1Price
+    tick
+    feeGrowthGlobal0X128
+    feeGrowthGlobal1X128
+    tvlUSD
+    volumeToken0
+    volumeToken1
+    volumeUSD
+    feesUSD
+    txCount
+    open
+    high
+    low
+    close
+  }
+}

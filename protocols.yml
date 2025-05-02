@@ -1,0 +1,11 @@
+uniswap:
+  api_key: ${THE_GRAPH_API_KEY}
+  subgraph_id: ${THE_GRAPH_UNISWAP_SUBGRAPH_ID}
+  endpoint_template: "https://gateway.thegraph.com/api/{api_key}/subgraphs/id/{subgraph_id}"
+  page_size: 1000
+
+sushiswap:
+  api_key: ${THE_GRAPH_API_KEY}
+  subgraph_id: ${THE_GRAPH_SUSHISWAP_SUBGRAPH_ID}
+  endpoint_template: "https://gateway.thegraph.com/api/subgraphs/id/{subgraph_id}"
+  page_size: 1000

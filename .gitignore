@@ -1,0 +1,17 @@
+# データの生データ
+data/raw
+
+# ローカル設定ファイルや.env
+.env
+
+# その他
+.DS_Store
+.ipynb_checkpoints/
+node_modules
+__pycache__
+*.log
+
+# ビルド生成物
+untracked/
+dist/
+target/

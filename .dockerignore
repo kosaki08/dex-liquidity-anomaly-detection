@@ -1,0 +1,13 @@
+# データの生データ
+data/raw
+
+# ローカル設定ファイルや.env
+.env
+
+# Pythonキャッシュやビルド生成物
+__pycache__/
+*.pyc
+
+# dbt の target や logs
+target/
+dbt_modules/

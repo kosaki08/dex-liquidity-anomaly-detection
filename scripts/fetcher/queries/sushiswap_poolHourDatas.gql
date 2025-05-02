@@ -1,0 +1,53 @@
+query PoolHourDatas(
+  $startTime: Int!
+  $endTime: Int!
+  $first: Int!
+  $skip: Int!
+) {
+  poolHourDatas(
+    first: $first
+    skip: $skip
+    where: {
+      periodStartUnix_gte: $startTime
+      periodStartUnix_lt: $endTime
+    }
+    orderBy: periodStartUnix
+    orderDirection: asc
+  ) {
+    id
+    periodStartUnix
+
+    # プール情報
+    pool {
+      id
+      token0 { id symbol name decimals }
+      token1 { id symbol name decimals }
+      feeTier
+    }
+
+    # 流動性／価格情報
+    liquidity
+    sqrtPrice
+    token0Price
+    token1Price
+    tick
+
+    # 手数料成長量
+    feeGrowthGlobal0X128
+    feeGrowthGlobal1X128
+
+    # ボリューム／TVL／取引数
+    tvlUSD
+    volumeToken0
+    volumeToken1
+    volumeUSD
+    feesUSD
+    txCount
+
+    # 高値・安値・始値・終値
+    open
+    high
+    low
+    close
+  }
+}
