@@ -1,0 +1,30 @@
+{
+  "name": "DEX Liquidity Anomaly Dev",
+  "dockerFile": "Dockerfile",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [
+    8080, // Airflow Web UI
+    8501, // Streamlit
+    5000, // Bento API
+    8888 // Jupyter
+  ],
+  "postCreateCommand": "pip list --format=columns",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "batisteo.vscode-dbt-power-user",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "dbtPowerUser.dbtProjectSubfolder": "models"
+      }
+    }
+  },
+  "remoteUser": "vscode"
+}

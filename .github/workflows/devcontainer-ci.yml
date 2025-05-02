@@ -1,0 +1,38 @@
+name: Dev Container CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  devcontainer-tests:
+    runs-on: ubuntu-latest
+
+    # パーミッション設定
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      # ソースをチェックアウト
+      - uses: actions/checkout@v4
+
+      # Dev Container をビルド & 起動
+      - name: Run tasks in Dev Container
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: |
+            pip list
+
+            echo "🔎 Running unit tests..."
+            pytest -q
+
+            echo "🏗️ Building dbt models..."
+            # --warn-error でテスト失敗を CI Fail に
+            dbt deps
+            dbt build --project-dir . --profiles-dir . --warn-error --no-write-json
+
+          env: ".devcontainer/devcontainer.env"
+          # 高速化のため Docker layer cache を GitHub に保存
+          cacheFrom: ghcr.io/${{ github.repository }}/devcontainer:cache
