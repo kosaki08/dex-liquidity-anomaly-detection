@@ -1,25 +1,25 @@
-name: "dex_liquidity_anomaly_detection"    
-version: "1.0.0"                           
-config-version: 2                            
-profile: "dex_bigquery"                      
+name: "dex_liquidity_anomaly_detection"
+version: "1.0.0"
+config-version: 2
+profile: "dex_bigquery"
 
-model-paths: ["models"]                     
-macro-paths: ["macros"]                     
-analysis-paths: ["analysis"]                
-test-paths: ["tests"]                       
-data-paths: ["data"]                        
-snapshot-paths: ["snapshots"]               
+model-paths: ["models"]
+macro-paths: ["macros"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+data-paths: ["data"]
+snapshot-paths: ["snapshots"]
 
 # dbt run 時の生成物置き場
-target-path: "target"                       
-clean-targets:                              
-  - "target"                                
-  - "dbt_modules"                           
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_modules"
 
 models:
   dex_liquidity_anomaly_detection:
     # BigQuery の dataset（schema）をデフォルトで override
-    +dataset: "dex_dataset"                  # GCP プロジェクト側にデータセットとして作成する
+    +dataset: "dex_dataset" # GCP プロジェクト側にデータセットとして作成する
 
     # staging 配下のモデルは view 化
     staging:
@@ -30,6 +30,6 @@ models:
     # mart 配下のモデルは incremental テーブル化
     mart:
       +materialized: incremental
-      +unique_key: ["pool_id", "hour"]       # インクリメンタル更新のキー
+      +unique_key: ["pool_id", "hour"] # インクリメンタル更新のキー
       +tags: ["mart"]
       +description: "異常検知用の特徴量を計算した最終テーブル"

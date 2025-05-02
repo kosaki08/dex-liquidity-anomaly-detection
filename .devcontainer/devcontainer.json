@@ -3,7 +3,8 @@
   "dockerFile": "Dockerfile",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers-contrib/features/node:1": { "version": "lts" }
   },
   "forwardPorts": [
     8080, // Airflow Web UI
@@ -11,18 +12,24 @@
     5000, // Bento API
     8888 // Jupyter
   ],
-  "postCreateCommand": "pip list --format=columns",
+  "postCreateCommand": "pip list --format=columns && npm install",
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
         "batisteo.vscode-dbt-power-user",
-        "charliermarsh.ruff"
+        "charliermarsh.ruff",
+        "esbenp.prettier-vscode"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
-        "dbtPowerUser.dbtProjectSubfolder": "models"
+        "dbtPowerUser.dbtProjectSubfolder": "models",
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[yaml]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" }
       }
     }
   },
