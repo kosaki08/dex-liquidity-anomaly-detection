@@ -1,0 +1,11 @@
+services:
+  airflow:
+    image: apache/airflow:3.0.0-python3.11
+    command: standalone
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"

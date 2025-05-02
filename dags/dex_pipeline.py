@@ -1,14 +1,18 @@
+import sys
 from datetime import datetime
+from pathlib import Path
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-
 from scripts.fetcher.run_fetch import fetch_pool_data
+
+sys.path.append(str(Path(__file__).resolve().parents[1] / "scripts"))
+
 
 with DAG(
     dag_id="dex_liquidity_raw",
     start_date=datetime(2025, 5, 1),
-    schedule_interval="@hourly",
+    schedule="@hourly",
     catchup=False,
 ) as dag:
 
