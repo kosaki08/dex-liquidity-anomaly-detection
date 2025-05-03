@@ -1,0 +1,20 @@
+{
+  "name": "dex-liquidity-anomaly-detection",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kosaki08/dex-liquidity-anomaly-detection.git"
+  },
+  "keywords": [],
+  "author": "Kazunori Osaki <kazunoriosaki@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kosaki08/dex-liquidity-anomaly-detection/issues"
+  },
+  "homepage": "https://github.com/kosaki08/dex-liquidity-anomaly-detection#readme",
+  "description": ""
+}
