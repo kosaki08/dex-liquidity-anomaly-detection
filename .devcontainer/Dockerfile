@@ -8,22 +8,15 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 
 # ---------- Python パッケージ ----------
-ARG AIRFLOW_VERSION=2.9.1
-ARG PYTHON_VERSION=3.11
-ARG CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
+RUN pip install --no-cache-dir poetry
 
-RUN pip install --no-cache-dir \
-  "apache-airflow==${AIRFLOW_VERSION}" \
-  --constraint "${CONSTRAINT_URL}" \
-  && pip install --no-cache-dir \
-  dbt-duckdb \
-  dbt-bigquery \
-  mlflow \
-  river \
-  bentoML \
-  optuna \
-  lightgbm \
-  jupyterlab
+# プロジェクトルートに移動し、先に lock／toml をコピー
+WORKDIR /workspaces/${localWorkspaceFolderBasename}
+COPY pyproject.toml poetry.lock ./
+
+# 仮想環境は作らずコンテナ全体にインストール
+RUN poetry config virtualenvs.create false \
+  && poetry install --no-root --no-interaction --no-interaction --no-ansi
 
 # ---------- Node.js ----------
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
