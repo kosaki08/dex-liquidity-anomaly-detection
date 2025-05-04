@@ -1,0 +1,45 @@
+-- ロールの使用
+USE ROLE ACCOUNTADMIN;
+
+-- DATABASE の使用
+USE DATABASE DEX_RAW;
+
+-- SCHEMA の使用
+USE SCHEMA RAW;
+
+-- ステージが存在しない場合は作成
+CREATE STAGE IF NOT EXISTS DEX_STAGE FILE_FORMAT = JSONL_FMT;
+
+-- ETL_ROLEにステージへの権限を付与
+GRANT USAGE ON STAGE DEX_STAGE TO ROLE ETL_ROLE;
+
+-- ステージへの読み込み/書き込み権限をETL_ROLEに付与
+GRANT READ,
+WRITE ON STAGE DEX_STAGE TO ROLE ETL_ROLE;
+
+-- Uniswapテーブルへの権限をETL_ROLEに付与
+GRANT
+SELECT
+,
+  INSERT ON TABLE pool_hourly_uniswap TO ROLE ETL_ROLE;
+
+-- Sushiswapテーブルへの権限をETL_ROLEに付与
+GRANT
+SELECT
+,
+  INSERT ON TABLE pool_hourly_sushiswap TO ROLE ETL_ROLE;
+
+-- 権限の確認
+SHOW GRANTS TO ROLE ETL_ROLE;
+
+-- ステージへの権限を確認
+SHOW GRANTS ON STAGE DEX_STAGE;
+
+-- Uniswapテーブルへの権限を確認
+SHOW GRANTS ON TABLE pool_hourly_uniswap;
+
+-- Sushiswapテーブルへの権限を確認
+SHOW GRANTS ON TABLE pool_hourly_sushiswap;
+
+-- JSONL_FMT の権限を確認
+GRANT USAGE ON FILE FORMAT RAW.JSONL_FMT TO ROLE ETL_ROLE;

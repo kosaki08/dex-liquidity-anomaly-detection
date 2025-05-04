@@ -1,11 +1,24 @@
 services:
   airflow:
-    image: apache/airflow:3.0.0-python3.11
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
     command: standalone
     ports:
       - "8080:8080"
     volumes:
       - ./dags:/opt/airflow/dags
       - ./data:/opt/airflow/data
+      - ./protocols.yml:/opt/airflow/dags/protocols.yml
     environment:
+      THE_GRAPH_API_KEY: "${THE_GRAPH_API_KEY}"
+      THE_GRAPH_UNISWAP_SUBGRAPH_ID: "${THE_GRAPH_UNISWAP_SUBGRAPH_ID}"
+      THE_GRAPH_SUSHISWAP_SUBGRAPH_ID: "${THE_GRAPH_SUSHISWAP_SUBGRAPH_ID}"
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      SNOWFLAKE_USER: "${SNOWFLAKE_USER}"
+      SNOWFLAKE_PASSWORD: "${SNOWFLAKE_PASSWORD}"
+      SNOWFLAKE_ACCOUNT: "${SNOWFLAKE_ACCOUNT}"
+      SNOWFLAKE_WAREHOUSE: "${SNOWFLAKE_WAREHOUSE}"
+      SNOWFLAKE_DATABASE: "${SNOWFLAKE_DATABASE}"
+      SNOWFLAKE_SCHEMA: "${SNOWFLAKE_SCHEMA}"
+      SNOWFLAKE_ROLE: "${SNOWFLAKE_ROLE}"
