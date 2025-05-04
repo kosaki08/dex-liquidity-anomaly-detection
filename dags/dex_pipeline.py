@@ -1,4 +1,8 @@
 import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[1] / "scripts"))  # nopep8
+
 from datetime import datetime
 from pathlib import Path
 
@@ -7,16 +11,14 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.providers.standard.operators.python import PythonOperator
 from scripts.fetcher.run_fetch import fetch_pool_data
 
-sys.path.append(str(Path(__file__).resolve().parents[1] / "scripts"))
 
-
-def put_and_copy(protocol: str, ds: str) -> None:
+def put_and_copy(protocol: str, ts_nodash: str) -> None:
     """
-    - @RAW.DEX_STAGE へ file:///opt/airflow/data/raw/{protocol}/{ds}_pool.jsonl を PUT
+    - @RAW.DEX_STAGE へ file:///opt/airflow/data/raw/{protocol}/{ts_nodash}_pool.jsonl を PUT
     - RAW.pool_hourly_{protocol} へ COPY
     """
-    local_file = f"/opt/airflow/data/raw/{protocol}/{ds}_pool.jsonl"
-    stage_path = f"@RAW.DEX_STAGE/{ds}_pool.jsonl"
+    local_file = f"/opt/airflow/data/raw/{protocol}/{ts_nodash}_pool.jsonl"
+    stage_path = f"@RAW.DEX_STAGE/{ts_nodash}_pool.jsonl"
     target_table = f"RAW.pool_hourly_{protocol}"
 
     hook = SnowflakeHook(snowflake_conn_id="snowflake_default")
@@ -49,7 +51,8 @@ with DAG(
             python_callable=fetch_pool_data,
             op_kwargs={
                 "protocol": proto,
-                "output_path": f"/opt/airflow/data/raw/{proto}/{{{{ ds }}}}_pool.jsonl",
+                # 例: 20250505T090000Z_pool.jsonl
+                "output_path": f"/opt/airflow/data/raw/{proto}/{{{{ ts_nodash }}}}_pool.jsonl",
                 "data_interval_end": "{{ data_interval_end }}",
             },
         )
@@ -60,7 +63,7 @@ with DAG(
             python_callable=put_and_copy,
             op_kwargs={
                 "protocol": proto,
-                "ds": "{{ ds }}",
+                "ts_nodash": "{{ ts_nodash }}",
             },
         )
 

@@ -10,6 +10,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./data:/opt/airflow/data
       - ./protocols.yml:/opt/airflow/dags/protocols.yml
+      - ./:/opt/airflow/project
     env_file:
       - .env
     environment:
