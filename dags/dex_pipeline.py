@@ -24,8 +24,7 @@ def put_and_copy(protocol: str, ts_nodash: str) -> None:
     hook = SnowflakeHook(snowflake_conn_id="snowflake_default")
     with hook.get_conn() as conn:
         cur = conn.cursor()
-        cur.execute(
-            f"PUT file://{local_file} @RAW.DEX_STAGE AUTO_COMPRESS=FALSE")
+        cur.execute(f"PUT file://{local_file} @RAW.DEX_STAGE AUTO_COMPRESS=FALSE")
         cur.execute(
             f"""
             COPY INTO {target_table} (raw)          -- 列リストを指定
@@ -43,7 +42,6 @@ with DAG(
     catchup=False,
     tags=["dex", "snowflake"],
 ) as dag:
-
     for proto in ["uniswap", "sushiswap"]:
         # データ抽出
         extract = PythonOperator(

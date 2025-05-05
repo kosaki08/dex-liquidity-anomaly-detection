@@ -5,7 +5,7 @@ description = ""
 authors = [{ name = "Kazunori Osaki", email = "claudioropez.k@gmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = "^3.11"
+requires-python = ">=3.11"
 dependencies = [
     "apache-airflow-providers-snowflake (>=5.3.1,<6.0.0)",
     "dbt-duckdb (>=1.9.3,<2.0.0)",
@@ -25,3 +25,10 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11.8"
+
+
+[tool.ruff]
+line-length = 120

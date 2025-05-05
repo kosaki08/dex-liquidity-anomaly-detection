@@ -4,8 +4,9 @@ from typing import Any, Dict
 from .base import BaseFetcher
 from .config import load_protocol_config
 
-_UNI_QUERY = (Path(__file__).parent / "queries" /
-              "uniswap_poolHourDatas.gql").read_text()
+_UNI_QUERY = (
+    Path(__file__).parent / "queries" / "uniswap_poolHourDatas.gql"
+).read_text()
 
 
 def build_uniswap_fetcher() -> BaseFetcher:

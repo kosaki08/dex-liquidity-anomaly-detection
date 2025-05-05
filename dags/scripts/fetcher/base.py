@@ -14,7 +14,14 @@ class BaseFetcher:
     Base class for fetching data from a GraphQL endpoint.
     """
 
-    def __init__(self, name, endpoint, query: str, page_size: int, headers: Optional[Dict[str, str]] = None):
+    def __init__(
+        self,
+        name,
+        endpoint,
+        query: str,
+        page_size: int,
+        headers: Optional[Dict[str, str]] = None,
+    ):
         """
         Initialize the BaseFetcher.
         """
@@ -29,8 +36,7 @@ class BaseFetcher:
         Fetch data for a specific time interval.
         """
         # 1時間前を start／end timestamp に変換
-        end_dt = datetime.fromisoformat(
-            interval_end_iso.replace("Z", "+00:00"))
+        end_dt = datetime.fromisoformat(interval_end_iso.replace("Z", "+00:00"))
         start_dt = end_dt - timedelta(hours=1)
         start_ts = int(start_dt.timestamp())
         end_ts = int(end_dt.timestamp())
@@ -45,8 +51,12 @@ class BaseFetcher:
                 "skip": skip,
             }
             logging.info(f"[{self.name}] fetch skip={skip}")
-            resp = requests.post(self.endpoint, json={
-                                 "query": self.query, "variables": variables}, headers=self.headers, timeout=30)
+            resp = requests.post(
+                self.endpoint,
+                json={"query": self.query, "variables": variables},
+                headers=self.headers,
+                timeout=30,
+            )
             resp.raise_for_status()
             data = resp.json()
             if data.get("errors"):

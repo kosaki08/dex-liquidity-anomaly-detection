@@ -28,7 +28,8 @@ def check_snowflake_connection(conn_id: str = "snowflake_default") -> None:
                 _ = cur.fetchone()
     except Exception as exc:
         raise AirflowFailException(
-            f"[{conn.conn_id}] Snowflake 接続失敗: {exc}") from exc
+            f"[{conn.conn_id}] Snowflake 接続失敗: {exc}"
+        ) from exc
 
 
 with DAG(
@@ -38,7 +39,6 @@ with DAG(
     catchup=False,
     tags=["check", "snowflake", "connection"],
 ) as dag:
-
     PythonOperator(
         task_id="check_connection",
         python_callable=check_snowflake_connection,
