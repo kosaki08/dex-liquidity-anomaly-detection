@@ -33,8 +33,8 @@ jobs:
             echo "🏗️ dbt deps / parse"
             export DBT_PROFILES_DIR=ci_profiles
 
-            dbt deps --project-dir .
-            dbt parse --project-dir . --warn-error
+            dbt deps
+            dbt parse --warn-error
 
           env: ".devcontainer/devcontainer.env"
           # 高速化のため Docker layer cache を GitHub に保存
