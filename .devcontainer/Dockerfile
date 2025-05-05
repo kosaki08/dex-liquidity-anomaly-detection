@@ -28,5 +28,5 @@ RUN curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
   && apt-get install -y nodejs
 
-# ---------- ユーザ戻し ----------
+# ---------- vscode ユーザーに切り替え ----------
 USER vscode

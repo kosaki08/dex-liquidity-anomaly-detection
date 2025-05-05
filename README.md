@@ -1,5 +1,3 @@
-以下に、添付の内容をもとにした README.md を作成しました：
-
 # DEX Liquidity Anomaly Detection Pipeline
 
 分散型取引所（DEX）の流動性データをリアルタイムで収集・異常検知するパイプラインです。Uniswap V3, Sushiswap から hourly データを抽出し、River による 1 時間ごとのオンライン学習によって異常な流動性パターンを検知します。

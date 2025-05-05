@@ -8,8 +8,12 @@ from pathlib import Path
 
 from airflow import DAG
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from airflow.providers.standard.operators.bash import BashOperator
 from airflow.providers.standard.operators.python import PythonOperator
 from scripts.fetcher.run_fetch import fetch_pool_data
+
+SNOW_DB = "DEX_RAW"
+SNOW_SCHEMA = "RAW"
 
 
 def put_and_copy(protocol: str, ts_nodash: str) -> None:
@@ -18,18 +22,21 @@ def put_and_copy(protocol: str, ts_nodash: str) -> None:
     - RAW.pool_hourly_{protocol} へ COPY
     """
     local_file = f"/opt/airflow/data/raw/{protocol}/{ts_nodash}_pool.jsonl"
-    stage_path = f"@RAW.DEX_STAGE/{ts_nodash}_pool.jsonl"
-    target_table = f"RAW.pool_hourly_{protocol}"
+    stage_path = f"@{SNOW_DB}.{SNOW_SCHEMA}.DEX_STAGE/{ts_nodash}_pool.jsonl"
+    target_table = f"{SNOW_DB}.{SNOW_SCHEMA}.pool_hourly_{protocol}"
 
     hook = SnowflakeHook(snowflake_conn_id="snowflake_default")
     with hook.get_conn() as conn:
         cur = conn.cursor()
-        cur.execute(f"PUT file://{local_file} @RAW.DEX_STAGE AUTO_COMPRESS=FALSE")
+
+        cur.execute(f"USE DATABASE {SNOW_DB}")
+
+        cur.execute(f"PUT file://{local_file} {stage_path} AUTO_COMPRESS=FALSE")
         cur.execute(
             f"""
             COPY INTO {target_table} (raw)          -- 列リストを指定
             FROM {stage_path}
-            FILE_FORMAT = (FORMAT_NAME = RAW.JSONL_FMT)
+            FILE_FORMAT = (FORMAT_NAME = DEX_RAW.RAW.JSONL_FMT)
             ON_ERROR = 'CONTINUE'
             """
         )
@@ -42,6 +49,14 @@ with DAG(
     catchup=False,
     tags=["dex", "snowflake"],
 ) as dag:
+    dbt_run = BashOperator(
+        task_id="dbt_run_mart",
+        bash_command=(
+            "cd /opt/airflow/project && "
+            "dbt run --target sf -s +mart_pool_features --profiles-dir profiles --full-refresh"
+        ),
+    )
+
     for proto in ["uniswap", "sushiswap"]:
         # データ抽出
         extract = PythonOperator(
@@ -65,4 +80,4 @@ with DAG(
             },
         )
 
-        extract >> put_and_copy_task
+        extract >> put_and_copy_task >> dbt_run
