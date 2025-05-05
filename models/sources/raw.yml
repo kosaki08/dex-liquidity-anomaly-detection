@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: raw
     description: "Snowflake RAW layer"
-    database: DEX_RAW
+    database: "{{ 'DEX_RAW' if target.type != 'duckdb' else '' }}"
     schema: RAW
     tables:
       - name: pool_hourly_uniswap
