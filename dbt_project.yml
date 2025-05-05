@@ -7,7 +7,7 @@ model-paths: ["models"]
 macro-paths: ["macros"]
 analysis-paths: ["analysis"]
 test-paths: ["tests"]
-data-paths: ["data"]
+seed-paths: ["data"]
 snapshot-paths: ["snapshots"]
 
 # dbt run 時の生成物置き場

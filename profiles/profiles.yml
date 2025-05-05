@@ -1,0 +1,6 @@
+dex_bigquery:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: /tmp/dev.duckdb
