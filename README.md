@@ -1,6 +1,7 @@
 # DEX Liquidity Anomaly Detection Pipeline
 
-分散型取引所（DEX）の流動性データをリアルタイムで収集・異常検知するパイプラインです。Uniswap V3, Sushiswap から hourly データを抽出し、River による 1 時間ごとのオンライン学習によって異常な流動性パターンを検知します。
+分散型取引所（DEX）の流動性データを毎時収集し、特徴量を生成した上で LightGBM モデルによる異常スパイク検知を行うパイプラインです。
+Uniswap V3 と Sushiswap から hourly データを抽出し、週次で LightGBM モデルを再学習 (retrain_lightgbm)、毎時間 predict_volume_spike で最新データをスコアリング・Slack 通知します。
 
 ## 📊 アーキテクチャ
 
@@ -15,13 +16,19 @@
 │  ├ Uniswap V3│           └──────┬────┘
 │  └ Sushiswap │                  │ dbt run
 └──────────────┘                  ▼
-                           ┌─────────────┐
-                           │  River OL   │  hourly partial_fit
-                           └──────┬──────┘
-                                  │ metrics
-                           ┌───────────┐
-                           │   MLflow  │  experiment tracking
-                           └──────┬────┘
+                           ┌──────────────┐
+                           │ retrain_lgbm │  @weekly retrain  ← train_lightgbm.py
+                           └──────┬───────┘
+                                 │ model: volume_spike_lgbm (Production)
+                                 ▼
+                           ┌───────────────────────┐
+                           │ predict_volume_spike  │  @hourly predict + Slack alert
+                           └──────┬────────────────┘
+                                 │ score API (BentoML)
+                                 ▼
+                           ┌────────────┐
+                           │  BentoML   │  /score
+                           └────────────┘
                                   │
                            ┌─────────────┐
                            │ BentoML API │  /score   ← Cloud Run
@@ -43,9 +50,9 @@
 
 ### 機械学習 & API
 
-- **オンライン学習**: River (HalfSpaceTrees: Isolation Forest ベースのオンラインアルゴリズム)
+- **初期学習 & 週次再学習**: LightGBM (LGBMClassifier) + MLflow
 - **実験管理**: MLflow
-- **モデル配信**: BentoML + FastAPI
+- **モデル配信**: BentoML + FastAPI (LightGBM)
 - **デプロイ**: Cloud Run
 
 ### 可視化 & モニタリング
@@ -109,14 +116,18 @@ docker-compose exec airflow airflow dags trigger dex_liquidity_raw
 dbt build
 ```
 
-5. River オンライン学習の起動
+5. Airflow DAG の実行
+
+- 初回／週次再学習
 
 ```bash
-# 初期モデルを訓練
-docker-compose exec airflow airflow dags trigger train_initial_model
+docker-compose exec airflow airflow dags trigger retrain_lightgbm
+```
 
-# オンライン学習スケジュールを開始
-docker-compose exec airflow airflow dags trigger update_model_hourly
+- 毎時推論＆Slack 通知
+
+```bash
+docker-compose exec airflow airflow dags trigger predict_volume_spike
 ```
 
 6. API サーバー起動
@@ -162,63 +173,94 @@ streamlit run app/streamlit_app.py
 
 ## 🔄 データフロー
 
-1. **データ収集**: The Graph API から hourly プールデータを取得
-2. **ロード**: Snowflake RAW レイヤに COPY INTO
-3. **変換**: dbt でステージング～マートモデル作成
-4. **モデル学習**: 初期バッチ学習＋継続的なオンライン学習
-5. **異常検知**: 新規データに対して 1 時間ごとに予測
-6. **可視化**: Streamlit ダッシュボードでリアルタイム表示
+1. **データ収集**
+   The Graph API から Uniswap V3／Sushiswap の hourly プールデータを取得
+2. **ロード**
+   Airflow DAG (`dex_liquidity_raw`) で Snowflake RAW レイヤへ `COPY INTO`
+3. **変換**
+   dbt で Staging → Mart（`mart_pool_features_labeled`）モデルをビルド
+4. **モデル学習**
+   - **初期学習**: `train_lightgbm.py` による直近 30 日バッチ学習
+   - **週次再学習**: Airflow DAG (`retrain_lightgbm`) で最新データを再学習・MLflow へログ
+5. **異常検知**
+   Airflow DAG (`predict_volume_spike`) で毎時最新データを LightGBM モデルでスコアリングし、閾値超過時は Slack へ通知
+6. **配信 & 可視化**
+   - **API**: BentoML + FastAPI で `/score` エンドポイント提供
+   - **ダッシュボード**: Streamlit でリアルタイムにスコア・Precision\@10 推移を表示
 
 ## 💡 主な機能
 
 ### 異常検知
 
-- IsolationForest による非教師あり学習
-- 流動性・ボリューム・価格の時系列異常を検知
-- データドリフト検知と自動再学習
+- **教師あり二値分類**: LightGBM (LGBMClassifier) による volume-spike 検出
+- **ラベル生成**: Mart モデル内でプールごとの 90th percentile を閾値とした教師ラベル (`y`) を自動生成
+- **毎時推論**: 最新データをスコアリングし、スコア ≥ 閾値 のプールを Slack へ通知
 
-### モニタリング
+### モニタリング & 管理
 
-- MLflow による実験管理
-- メトリクス（F1, Precision）トラッキング
-- ダッシュボードでの TOP N 異常可視化
+- **MLflow トラッキング**: 学習／再学習の run, metrics (PR-AUC, Precision\@10, Recall\@10), パラメータを一元管理
+- **モデルレジストリ**: `volume_spike_lgbm` を Production ステージに登録
+- **Slack アラート**: `predict_volume_spike` DAG から `SlackWebhookOperator` でアラート配信
+
+### 配信 & 可視化
+
+- **BentoML API**: `/score` エンドポイントで外部システムからリアルタイムスコア取得可能
+- **Streamlit ダッシュボード**:
+  - スコア上位 N プール一覧
+  - スコア閾値スライダー
+  - Precision\@10／Recall\@10 推移グラフ
 
 ### 動作確認フロー（開発用）
 
-1. **プロファイル解決の確認**
+1. **DBT プロファイル解決の確認**
 
    ```bash
-   dbt debug   # profiles/ が取れているか確認
+   dbt debug   # profiles/ が正しく読めているか
    ```
 
-2. **モデル一覧**
+2. **ステージングモデル確認**
 
    ```bash
-   dbt ls -s "stg_*"  # モデル一覧
+   dbt ls -s "stg_*"   # Staging ビュー一覧をチェック
    ```
 
-3. **構文チェックのみ**
+3. **構文チェック**
 
    ```bash
-   dbt parse   # 実 DB 接続なし
+   dbt parse   # DuckDB なしで SQL 構文のみ検証
    ```
 
-4. **DuckDB (ローカル) で実行**
+4. **ローカル DuckDB で変換ビュー作成**
 
    ```bash
-   dbt run -s "stg_*"  # RAW → STG の変換ビューが作成
+   dbt run -s "stg_*"   # RAW → STG ビューをローカルで生成
    ```
 
-5. **Snowflake で実行**
+5. **Snowflake でステージング → マート**
 
    ```bash
-   dbt run -s "stg_*" --target sf
+   dbt run -s "mart_pool_features_labeled" --target sf --full-refresh
    ```
 
-## 🚧 ローンチ後のタスク
+6. **LightGBM モデル初期学習**
 
-- [ ] Snowflake trial 終了後 BigQuery External Table へ移行
-- [ ] データドリフト検知の強化
+   ```bash
+   airflow dags trigger retrain_lightgbm
+   ```
+
+7. **毎時推論＆Slack 通知**
+
+   ```bash
+   airflow dags trigger predict_volume_spike
+   ```
+
+## 🚧 今後のタスク
+
+- [ ] Snowflake 無償クレジット切れ後に **BigQuery 外部テーブル** 移行
+- [ ] データドリフト検知用に **再学習頻度 or 特徴量検知** ロジック強化
+- [ ] Slack 通知の **閾値チューニング** とアラート最適化
+- [ ] BentoML API の **スケーリング／監視** 設計
+- [ ] Streamlit ダッシュボードを **運用環境へデプロイ** (GitHub Pages など)
 
 ## 📝 ライセンス
 
