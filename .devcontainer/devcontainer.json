@@ -48,6 +48,5 @@
   "remoteEnv": {
     "DBT_PROFILES_DIR": "${containerWorkspaceFolder}/profiles"
   },
-  "remoteUser": "vscode",
-  "runArgs": ["--env-file", ".env"]
+  "remoteUser": "vscode"
 }

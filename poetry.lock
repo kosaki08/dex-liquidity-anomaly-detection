@@ -555,6 +555,24 @@ pandas = ["pandas (>=2.1.2,<2.2)"]
 polars = ["polars (>=1.26.0)"]
 
 [[package]]
+name = "apache-airflow-providers-slack"
+version = "9.0.5"
+description = "Provider package apache-airflow-providers-slack for Apache Airflow"
+optional = false
+python-versions = "~=3.9"
+groups = ["main"]
+files = [
+    {file = "apache_airflow_providers_slack-9.0.5-py3-none-any.whl", hash = "sha256:58181f7504f3ced3ceb9213b65fc7d29345f3b90947cb15217b78dd278924a0e"},
+    {file = "apache_airflow_providers_slack-9.0.5.tar.gz", hash = "sha256:bece2e12b3bbaf01863cb5ac754c1eba196476430f2dc8433d3427fa852520dc"},
+]
+
+[package.dependencies]
+apache-airflow = ">=2.9.0"
+apache-airflow-providers-common-compat = ">=1.6.0"
+apache-airflow-providers-common-sql = ">=1.20.0"
+slack_sdk = ">=3.19.0"
+
+[[package]]
 name = "apache-airflow-providers-smtp"
 version = "2.0.3"
 description = "Provider package apache-airflow-providers-smtp for Apache Airflow"
@@ -6905,6 +6923,21 @@ files = [
 ]
 
 [[package]]
+name = "slack-sdk"
+version = "3.35.0"
+description = "The Slack API Platform SDK for Python"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "slack_sdk-3.35.0-py2.py3-none-any.whl", hash = "sha256:00933d171fbd8a068b321ebb5f89612cc781d3183d8e3447c85499eca9d865be"},
+    {file = "slack_sdk-3.35.0.tar.gz", hash = "sha256:8183b6cbf26a0c1e2441478cd9c0dc4eef08d60c1394cfdc9a769e309a9b6459"},
+]
+
+[package.extras]
+optional = ["SQLAlchemy (>=1.4,<3)", "aiodns (>1.0)", "aiohttp (>=3.7.3,<4)", "boto3 (<=2)", "websocket-client (>=1,<2)", "websockets (>=9.1,<16)"]
+
+[[package]]
 name = "smmap"
 version = "5.0.2"
 description = "A pure Python implementation of a sliding window memory map manager"
@@ -8218,4 +8251,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.13"
-content-hash = "6947fb8a60331c1f912d781bbe2a7f4388c5e386ba6b2ef4387ce71c242f912f"
+content-hash = "ce68094c0079109145bd8d56ceb0f1637484e4885b4c747fff187f39547e9f19"

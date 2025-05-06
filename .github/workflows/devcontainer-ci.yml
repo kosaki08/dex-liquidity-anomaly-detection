@@ -12,16 +12,25 @@ jobs:
     # パーミッション設定
     permissions:
       contents: read
-      packages: read
+      # GHCR へ push するため write 権限を設定
+      packages: write
 
     steps:
       # ソースをチェックアウト
       - uses: actions/checkout@v4
 
+      # テスト用の profiles.yml を作成
+      - name: Prepare ci_profiles
+        run: |
+          mkdir -p ci_profiles
+          cp profiles/profiles.yml ci_profiles/
+
       # Dev Container をビルド & 起動
       - name: Run tasks in Dev Container
         uses: devcontainers/ci@v0.3
         with:
+          push: never
+          env: ".devcontainer/devcontainer.env"
           runCmd: |
             echo "🧹 Ruff lint"
             pip install ruff
@@ -35,7 +44,3 @@ jobs:
 
             dbt deps
             dbt parse --warn-error
-
-          env: ".devcontainer/devcontainer.env"
-          # 高速化のため Docker layer cache を GitHub に保存
-          cacheFrom: ghcr.io/${{ github.repository }}/devcontainer:cache
