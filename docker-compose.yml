@@ -20,6 +20,7 @@ services:
       AIRFLOW_CONN_SNOWFLAKE_DEFAULT: >-
         snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@/${SNOWFLAKE_DATABASE}/${SNOWFLAKE_SCHEMA}?account=${SNOWFLAKE_ACCOUNT}&warehouse=${SNOWFLAKE_WAREHOUSE}&role=${SNOWFLAKE_ROLE}
       MLFLOW_TRACKING_URI: http://mlflow:5000
+      PYTHONPATH: /opt/airflow/project
   mlflow:
     image: python:3.11-slim
     command:

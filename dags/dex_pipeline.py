@@ -1,15 +1,10 @@
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parents[1] / "scripts"))  # nopep8
-
 from datetime import datetime
-from pathlib import Path
 
 from airflow import DAG
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.providers.standard.operators.bash import BashOperator
 from airflow.providers.standard.operators.python import PythonOperator
+
 from scripts.fetcher.run_fetch import fetch_pool_data
 
 SNOW_DB = "DEX_RAW"

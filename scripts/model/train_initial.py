@@ -15,17 +15,8 @@ from river import anomaly, compose, preprocessing
 from river.compose import Pipeline
 from snowflake.connector import connect
 
-from scripts.model.constants import FEATURE_COLS
-
-SNOW_CONN = {
-    "user": os.getenv("SNOWFLAKE_USER"),
-    "password": os.getenv("SNOWFLAKE_PASSWORD"),
-    "account": os.getenv("SNOWFLAKE_ACCOUNT"),
-    "warehouse": "ETL_WH",
-    "database": "DEX_RAW",
-    "schema": "RAW",
-    "role": os.getenv("SNOWFLAKE_ROLE"),
-}
+from scripts.model.constants import FEATURE_COLS, SNOW_CONN
+from scripts.model.river_model_wrapper import RiverModelWrapper
 
 SQL = """
 SELECT
@@ -47,15 +38,6 @@ ORDER BY hour_ts
 
 
 logger = logging.getLogger(__name__)
-
-
-class RiverModelWrapper(mlflow.pyfunc.PythonModel):
-    def load_context(self, context) -> None:
-        with open(context.artifacts["model_file"], "rb") as f:
-            self.model = pickle.load(f)
-
-    def predict(self, model_input: pd.DataFrame) -> pd.Series:
-        return model_input.apply(lambda row: self.model.score_one(row.to_dict()), axis=1)
 
 
 def load_features() -> pd.DataFrame:
