@@ -6,12 +6,12 @@ models:
     columns:
       - name: pool_id
         tests: [not_null]
-      - name: hour
+      - name: hour_ts
         tests: [not_null]
   - name: stg_pool_hourly_sushiswap
     description: "Typed hourly data for Sushiswap"
     columns:
       - name: pool_id
         tests: [not_null]
-      - name: hour
+      - name: hour_ts
         tests: [not_null]
