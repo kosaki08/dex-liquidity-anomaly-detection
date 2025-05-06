@@ -33,13 +33,23 @@ select
     liquidity,
 
     -- 24h 変化率（インライン window）
-    (volume_usd / lag(volume_usd, 24) over (
-        partition by pool_id order by hour_ts
-    )) - 1        as vol_rate_24h,
+    (
+        NULLIF(volume_usd, 0)
+        /
+        NULLIF(
+        lag(volume_usd, 24) over (partition by pool_id order by hour_ts),
+        0
+        )
+    ) - 1 as vol_rate_24h,
 
-    (tvl_usd / lag(tvl_usd, 24) over (
-        partition by pool_id order by hour_ts
-    )) - 1        as tvl_rate_24h,
+    (
+        NULLIF(tvl_usd, 0)
+        /
+        NULLIF(
+        lag(tvl_usd, 24) over (partition by pool_id order by hour_ts),
+        0
+        )
+    ) - 1 as tvl_rate_24h,
 
     -- 移動平均
     avg(volume_usd) over (

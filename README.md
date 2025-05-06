@@ -43,7 +43,7 @@
 
 ### 機械学習 & API
 
-- **オンライン学習**: River (IsolationForest)
+- **オンライン学習**: River (HalfSpaceTrees: Isolation Forest ベースのオンラインアルゴリズム)
 - **実験管理**: MLflow
 - **モデル配信**: BentoML + FastAPI
 - **デプロイ**: Cloud Run

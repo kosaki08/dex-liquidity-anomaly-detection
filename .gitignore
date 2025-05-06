@@ -21,3 +21,6 @@ dbt_packages/
 
 # DuckDB
 profiles/.user.yml
+
+# mlflow
+mlruns/

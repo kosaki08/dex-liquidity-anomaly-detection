@@ -11,9 +11,28 @@ services:
       - ./data:/opt/airflow/data
       - ./protocols.yml:/opt/airflow/dags/protocols.yml
       - ./:/opt/airflow/project
+      - ./mlruns:/opt/mlflow/mlruns
     env_file:
       - .env
     environment:
+      GIT_PYTHON_REFRESH: quiet
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW_CONN_SNOWFLAKE_DEFAULT: >-
         snowflake://${SNOWFLAKE_USER}:${SNOWFLAKE_PASSWORD}@/${SNOWFLAKE_DATABASE}/${SNOWFLAKE_SCHEMA}?account=${SNOWFLAKE_ACCOUNT}&warehouse=${SNOWFLAKE_WAREHOUSE}&role=${SNOWFLAKE_ROLE}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+  mlflow:
+    image: python:3.11-slim
+    command:
+      - sh
+      - -c
+      - |
+        pip install --no-cache-dir mlflow &&
+        mlflow ui \
+          --backend-store-uri file:///opt/mlflow/mlruns \
+          --default-artifact-root file:///opt/mlflow/mlruns \
+          --host 0.0.0.0 \
+          --port 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/opt/mlflow/mlruns
