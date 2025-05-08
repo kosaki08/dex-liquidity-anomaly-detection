@@ -53,6 +53,9 @@ class VolumeSpikeService:
         logger.info(f"predictリクエストを受信しました: {input_data}")
         # 入力データをDataFrameに変換
         df = pd.DataFrame(input_data)
+        # 列名を小文字に変換
+        df.columns = df.columns.str.lower()
+
         # 予測実行
         logger.info(f"予測を実行します: shape={df.shape}, columns={df.columns.tolist()}")
         logger.debug(f"predictリクエスト詳細: {input_data}")

@@ -51,6 +51,24 @@ services:
       - ./mlruns:/opt/mlflow/mlruns
     depends_on:
       - mlflow
+  streamlit:
+    image: python:3.11-slim
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir -r app/requirements.txt &&
+             streamlit run app/streamlit_app.py
+               --server.port=8501
+               --server.address=0.0.0.0"
+    volumes:
+      - ./:/app:cached
+    ports:
+      - "8501:8501"
+    environment:
+      - BENTO_API_URL=http://bento:3000/predict
+    env_file:
+      - .env
+    depends_on:
+      - bento
 
 volumes:
   bentoml_models:

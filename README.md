@@ -15,19 +15,25 @@
 - Snowflake RAW/COPY
 - dbt Staging / Mart モデル
 - LightGBM 初回学習 & MLflow 登録
+- 週次再学習 DAG（`retrain_lightgbm`）
+- 毎時推論 DAG（`predict_volume_spike`）
+- BentoML API & Streamlit ダッシュボード
 
 **🚧 開発中**
 
-- BentoML API & Streamlit ダッシュボード
-- 毎時推論／Slack 通知（`predict_volume_spike` DAG）
-- BentoML モデルロード最適化
-- リトライ／エラーハンドリング強化
+- ...
 
 **⏳ 実装予定**
 
+- Terraform による環境構築
+- リトライ／エラーハンドリング強化
+- Streamlit 上で１ヶ月分の時系列データと予測スコアを並べて表示
+- Precision\@10／Recall\@10 推移グラフの実装
 - BigQuery 外部テーブル移行
 - CI/CD（GitHub Actions）ワークフロー
 - シークレット管理強化（Vault など）
+- BentoML モデルロード最適化
+- Slack で通知
 
 ## アーキテクチャ
 
@@ -156,7 +162,15 @@ bentoml serve service:svc
 make deploy-to-cloud-run
 ```
 
-7. Streamlit ダッシュボード確認
+7. BentoML サービス起動
+
+```bash
+bentoml serve bentofile.yaml
+# または
+bentoml serve services.volume_spike_service:VolumeSpikeService
+```
+
+8. Streamlit ダッシュボード確認
 
 ```bash
 streamlit run app/streamlit_app.py
@@ -196,7 +210,7 @@ streamlit run app/streamlit_app.py
 ├── sql/                           # Snowflake 初期化 SQL
 │   └── 01\_create\_infra.sql など
 │
-├── app/                           # Streamlit ダッシュボード（追加予定）
+├── app/                           # Streamlit ダッシュボード
 │
 ├── docker-compose.yml
 ├── Dockerfile.airflow / Dockerfile.bento
@@ -238,7 +252,7 @@ streamlit run app/streamlit_app.py
 
 ### 配信 & 可視化
 
-- BentoML API: `/score` エンドポイントで外部システムからリアルタイムスコア取得可能
+- BentoML API: `/predict` エンドポイントでリアルタイムスコア取得可能
 - Streamlit ダッシュボード:
   - スコア上位 N プール一覧
   - スコア閾値スライダー
@@ -252,7 +266,7 @@ streamlit run app/streamlit_app.py
    dbt debug   # profiles/ が正しく読めているか
    ```
 
-2. **ステージングモデル確認**
+2. **staging モデル確認**
 
    ```bash
    dbt ls -s "stg_*"   # Staging ビュー一覧をチェック
@@ -270,7 +284,7 @@ streamlit run app/streamlit_app.py
    dbt run -s "stg_*"   # RAW → STG ビューをローカルで生成
    ```
 
-5. **Snowflake でステージング → マート**
+5. **Snowflake で staging → mart**
 
    ```bash
    dbt run -s "mart_pool_features_labeled" --target sf --full-refresh
