@@ -1,0 +1,10 @@
+service: "services.volume_spike_service:service"
+
+include:
+  - "services/**/*.py"
+
+python:
+  packages:
+    - cloudpickle==2.2.1
+    - graphviz==0.20.3
+    - pyarrow==16.1.0

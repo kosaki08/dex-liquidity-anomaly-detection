@@ -4,6 +4,7 @@ import lightgbm as lgb
 import mlflow
 import numpy as np
 import pandas as pd
+from mlflow.models.signature import infer_signature
 from mlflow.tracking import MlflowClient
 from sklearn.metrics import average_precision_score
 from sqlalchemy import create_engine
@@ -36,13 +37,17 @@ def train() -> None:
     # データ取得
     df = load_data(30)
     y = df["y"]
-    X = df.drop(columns=["dex", "pool_id", "hour_ts", "y"])
+    X = df.drop(columns=["dex", "pool_id", "hour_ts", "y"]).astype(np.float64)
 
     # モデル定義
     model = lgb.LGBMClassifier(num_leaves=63, learning_rate=0.05)
 
     # MLflow でランを開始
     with mlflow.start_run() as run:
+        # 自動ロギングを有効化
+        mlflow.lightgbm.autolog()
+
+        # モデルの学習を開始
         model.fit(X, y)
         # 予測スコアを計算
         y_scores = model.predict_proba(X)[:, 1]
@@ -55,17 +60,23 @@ def train() -> None:
         # Recall@10: 正例総数に対するトップ10でのカバー率
         recall_at_10 = y.iloc[top_idx].sum() / y.sum()
 
-        # メトリクスをログ
+        # メトリクスを追以下
         mlflow.log_metric("pr_auc", pr_auc)
         mlflow.log_metric("precision_at_10", precision_at_10)
         mlflow.log_metric("recall_at_10", recall_at_10)
 
-        # モデルをテキスト形式で保存 & artifact 登録
-        model.booster_.save_model("model.txt")
-        mlflow.log_artifact("model.txt")
+        # モデル入出力のシグネチャを推定
+        signature = infer_signature(X, y.astype(np.float64))
+
+        # Input Example を作成
+        input_example = X.iloc[[0]]
+
+        # モデルを保存
+        mlflow.lightgbm.log_model(model, "model", signature=signature, input_example=input_example)
 
         # モデルを Registry に登録して Production ステージへ
         client = MlflowClient()
+
         # すでに登録済みかチェック
         try:
             client.get_registered_model("volume_spike_lgbm")
@@ -76,7 +87,7 @@ def train() -> None:
         # モデルバージョンを追加
         mv = client.create_model_version(
             name="volume_spike_lgbm",
-            source=f"runs:/{run.info.run_id}/model.txt",
+            source=f"runs:/{run.info.run_id}/model",
             run_id=run.info.run_id,
         )
         # 最新を Production に昇格（既存を archive）

@@ -28,12 +28,29 @@ services:
       - -c
       - |
         pip install --no-cache-dir mlflow &&
-        mlflow ui \
-          --backend-store-uri file:///opt/mlflow/mlruns \
-          --default-artifact-root file:///opt/mlflow/mlruns \
+        mlflow server \
+          --backend-store-uri sqlite:////opt/mlflow/mlruns/mlflow.db \
+          --default-artifact-root file:///opt/mlflow/mlruns/artifacts \
           --host 0.0.0.0 \
           --port 5000
     ports:
       - "5000:5000"
     volumes:
+      - ./mlruns/artifacts:/opt/mlflow/mlruns/artifacts
+      - ./mlruns/db:/opt/mlflow/mlruns/db
+  bento:
+    build:
+      context: .
+      dockerfile: Dockerfile.bento
+    ports:
+      - "3000:3000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - bentoml_models:/root/.bentoml/models
       - ./mlruns:/opt/mlflow/mlruns
+    depends_on:
+      - mlflow
+
+volumes:
+  bentoml_models:

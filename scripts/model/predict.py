@@ -6,6 +6,9 @@ from snowflake.connector import connect
 
 
 def load_latest_model_from_registry(model_name: str, stage: str) -> None:
+    """
+    モデルを Registry からロード
+    """
     # BentoML からモデルをランナーとしてロード
     runner = bentoml.lightgbm.get(model_name + ":" + stage).to_runner()
     runner.init_local()  # Runner を初期化
@@ -13,6 +16,9 @@ def load_latest_model_from_registry(model_name: str, stage: str) -> None:
 
 
 def score_latest_row(threshold: float) -> dict:
+    """
+    最新のデータを取得して予測
+    """
     # Snowflake から最新 1 行を取得
     conn = connect(
         user=os.getenv("SNOWFLAKE_USER"),
@@ -37,7 +43,9 @@ def score_latest_row(threshold: float) -> dict:
     # BentoML runner を使って予測
     from bentoml import Runner
 
-    runner: Runner = Runner.get("volume_spike_lgbm:Production")
+    print("🔍 モデル一覧:", bentoml.models.list())
+
+    runner: Runner = Runner.get("volume_spike_lgbm")
     score = runner.run(X)[0]
 
     result = {

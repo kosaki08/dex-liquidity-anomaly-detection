@@ -13,7 +13,7 @@
   "forwardPorts": [
     8080, // Airflow Web UI
     8501, // Streamlit
-    5000, // Bento API
+    3000, // BentoML
     8888 // Jupyter
   ],
   "postCreateCommand": "pip list --format=columns && npm install",
