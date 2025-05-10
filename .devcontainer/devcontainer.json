@@ -22,6 +22,7 @@
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
         "batisteo.vscode-dbt-power-user",
         "charliermarsh.ruff",
         "esbenp.prettier-vscode",
@@ -41,6 +42,11 @@
           "editor.codeActionsOnSave": {
             "source.fixAll.ruff": "explicit"
           }
+        },
+        "notebook.formatOnSave.enabled": true,
+        "notebook.codeActionsOnSave": {
+          "notebook.source.fixAll.ruff": "explicit",
+          "notebook.source.organizeImports.ruff": "explicit"
         }
       }
     }

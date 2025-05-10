@@ -1,11 +1,11 @@
-# [WIP] DEX Liquidity Anomaly Detection Pipeline
+# [WIP] DEX Pool Reliability Evaluation Pipeline
 
-分散型取引所（DEX）の流動性データを毎時収集し、LightGBM モデルによる異常スパイク検知を行うパイプラインです。
+分散型取引所（DEX）の流動性データを毎時収集し、各プールの TVL／流動性の欠損・負値発生頻度や変動幅をもとに「信頼性スコア」を算出し、安定的に流動性を維持できているプールを可視化・モニタリングするパイプラインです。
 
-- Uniswap V3 / Sushiswap で流動性プールの異常スパイクを検知
-- 毎時間ロックされたトークンの時価総額（TVL）と取引量を The Graph API で取得
-- 週次で LightGBM モデルを再学習し、MLflow で管理・BentoML 経由で推論 API 化
-- 毎時間スコアリングし、閾値を超えたプールのみ Slack に自動通知
+- Uniswap V3 / Sushiswap の各プールを対象に「信頼性スコア」を算出
+- 毎時間、The Graph API から TVL・流動性・取引量データを取得
+- 週次で LightGBM ベースの Reliability Score モデルを再学習し、MLflow で実験管理・BentoML で推論 API 化
+- 毎時間最新の信頼性スコアを算出し、しきい値以下のプールを Slack へ自動通知
 
 ## 開発ステータス
 
@@ -21,7 +21,10 @@
 
 **🚧 開発中**
 
-- ...
+- 特徴量エンジニアリングと信頼性スコアリングモデルのパイプライン統合
+- 各プールの Reliability Score ダッシュボード整備 (Streamlit)
+- EDA Notebook の整備＆リポジトリへの追加
+- 特徴量エンジニアリングと異常検知モデルのパイプライン統合
 
 **⏳ 実装予定**
 
@@ -238,11 +241,11 @@ streamlit run app/streamlit_app.py
 
 ## 主な機能
 
-### 異常検知
+### 信頼性評価
 
-- 教師あり二値分類: LightGBM (LGBMClassifier) による volume-spike 検出
-- ラベル生成: Mart モデル内でプールごとの 90th percentile を閾値とした教師ラベル (`y`) を自動生成
-- 毎時推論: 最新データをスコアリングし、スコア ≥ 閾値 のプールを Slack へ通知
+- 流動性の欠損率・負値率・変動統計量を集約してスコアリング
+- 各プールごとに「Reliability Score」を算出 (0–1 正規化)
+- スコア閾値を下回るプールを Slack へアラート
 
 ### モニタリング & 管理
 

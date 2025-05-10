@@ -10,6 +10,7 @@ data/raw
 node_modules
 __pycache__
 *.log
+logs/
 
 # ビルド生成物
 untracked/
