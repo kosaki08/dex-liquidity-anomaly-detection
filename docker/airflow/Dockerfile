@@ -12,15 +12,8 @@ ARG AIRFLOW_VERSION=3.0.0
 ARG PYTHON_VERSION=3.11
 ARG CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
 
+# requirements をコピー
+COPY docker/airflow/requirements.txt ./requirements.txt
+
 RUN pip install --no-cache-dir --upgrade pip==25.1.1 \
-  && pip install --no-cache-dir \
-  apache-airflow==3.0.0 \
-  apache-airflow-providers-snowflake==6.2.2 \
-  apache-airflow-providers-slack==9.0.5 \
-  dbt-core==1.9.3 \
-  dbt-snowflake==1.9.3 \
-  dbt-duckdb==1.9.3 \
-  mlflow==2.22.0 \
-  bentoml==1.4.12 \
-  scikit-learn==1.6.1 \
-  snowflake-connector-python==3.15.0
+  && pip install --no-cache-dir -r requirements.txt

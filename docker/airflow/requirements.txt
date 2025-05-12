@@ -1,0 +1,7 @@
+apache-airflow-providers-snowflake
+apache-airflow-providers-slack
+dbt-core==1.9.3
+dbt-snowflake==1.9.3
+dbt-duckdb==1.9.3
+mlflow==2.22.0
+bentoml==1.4.12

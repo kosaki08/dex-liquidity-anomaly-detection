@@ -21,11 +21,11 @@
 
 **🚧 開発中**
 
+- Terraform による IaC
 - EDA Notebook の整備＆リポジトリへの追加
 
 **⏳ 実装予定**
 
-- Terraform による IaC
 - リトライ／エラーハンドリング強化
 - Streamlit 上で１ヶ月分の時系列データと予測スコアを並べて表示
 - Precision\@10／Recall\@10 推移グラフの実装
