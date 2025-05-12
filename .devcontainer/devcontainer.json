@@ -27,7 +27,9 @@
         "batisteo.vscode-dbt-power-user",
         "charliermarsh.ruff",
         "esbenp.prettier-vscode",
-        "tamasfe.even-better-toml"
+        "tamasfe.even-better-toml",
+        "hashicorp.hcl",
+        "hashicorp.terraform"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -48,6 +50,16 @@
         "notebook.codeActionsOnSave": {
           "notebook.source.fixAll.ruff": "explicit",
           "notebook.source.organizeImports.ruff": "explicit"
+        },
+        "[terraform]": {
+          "editor.defaultFormatter": "hashicorp.terraform",
+          "editor.formatOnSave": true,
+          "editor.formatOnSaveMode": "file"
+        },
+        "[terraform-vars]": {
+          "editor.defaultFormatter": "hashicorp.terraform",
+          "editor.formatOnSave": true,
+          "editor.formatOnSaveMode": "file"
         }
       }
     }

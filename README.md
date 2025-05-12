@@ -144,7 +144,7 @@ dbt build
 docker-compose exec airflow airflow dags trigger retrain_iforest
 ```
 
-- 毎時推論＆Slack 通知
+- 毎時推論
 
 ```bash
 docker-compose exec airflow airflow dags trigger predict_pool_iforest
@@ -209,6 +209,10 @@ streamlit run app/streamlit_app.py
 │   └── 01_create_infra.sql など
 │
 ├── app/                           # Streamlit ダッシュボード
+│
+├── infra/                         # Terraform インフラ
+│   ├── envs/                      # Dev / Prod 環境ごとの Terraform ファイル
+│   └── modules/                   # Terraform モジュール
 │
 ├── docker-compose.yml
 ├── Dockerfile.airflow / Dockerfile.bento
@@ -293,7 +297,7 @@ streamlit run app/streamlit_app.py
    airflow dags trigger retrain_iforest
    ```
 
-7. **毎時推論＆Slack 通知**
+7. **毎時推論**
 
    ```bash
    airflow dags trigger predict_pool_iforest
