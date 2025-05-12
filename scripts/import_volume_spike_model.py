@@ -9,7 +9,7 @@ from mlflow.tracking import MlflowClient
 def main():
     """
     MLflow のレジストリから Production ステージの
-    volume_spike_lgbm モデルを BentoML Store にインポートします。
+    pool_iforest モデルを BentoML Store にインポートします。
     """
     uri = os.getenv("MLFLOW_TRACKING_URI")
     if not uri:
@@ -20,7 +20,7 @@ def main():
     client = MlflowClient(tracking_uri=uri)
 
     # モデルのバージョンを取得
-    model_version = client.get_model_version_by_alias("volume_spike_lgbm", "production")
+    model_version = client.get_model_version_by_alias("pool_iforest", "production")
     if not model_version:
         print("Production バージョンが見つかりません")
         sys.exit(1)
@@ -36,7 +36,7 @@ def main():
     # BentoMLへのインポート
     try:
         bentoml.mlflow.import_model(
-            "volume_spike_lgbm",
+            "pool_iforest",
             f"runs:/{model_version.run_id}/model",
             labels={"stage": "production"},
         )

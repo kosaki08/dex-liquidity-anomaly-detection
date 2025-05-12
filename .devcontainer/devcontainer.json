@@ -14,7 +14,8 @@
     8080, // Airflow Web UI
     8501, // Streamlit
     3000, // BentoML
-    8888 // Jupyter
+    8888, // Jupyter
+    5001 // MLFlow
   ],
   "postCreateCommand": "pip list --format=columns && npm install",
   "customizations": {

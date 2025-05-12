@@ -5,4 +5,4 @@ set -eu
 python -u scripts/import_volume_spike_model.py
 
 # BentoML サービスを起動
-exec bentoml serve services.volume_spike_service:VolumeSpikeService
+exec bentoml serve services.volume_spike_service:PoolIForestService --reload

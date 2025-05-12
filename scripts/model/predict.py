@@ -39,17 +39,13 @@ def score_latest_row(threshold: float) -> dict:
     conn.close()
 
     # 特徴量だけ選択
-    X = df.drop(columns=["dex", "pool_id", "hour_ts", "y"])
-    # BentoML runner を使って予測
-    from bentoml import Runner
-
-    print("🔍 モデル一覧:", bentoml.models.list())
-
-    runner: Runner = Runner.get("volume_spike_lgbm")
-    score = runner.run(X)[0]
-
-    result = {
+    X = df.drop(columns=["dex", "pool_id", "hour_ts", "y"], errors="ignore")
+    runner = bentoml.runner
+    # IsolationForest: 予測は anomaly スコア
+    scores = runner.run(X)
+    score = float(-scores[0])  # 大きいほど異常
+    return {
         "pool_id": df["pool_id"].iloc[0],
-        "score": float(score),
+        "score": score,
+        "is_anomaly": score >= threshold,
     }
-    return result

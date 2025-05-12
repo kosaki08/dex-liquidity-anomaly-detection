@@ -62,12 +62,16 @@ def main():
     dt_local = datetime.combine(selected_date, selected_time)
     dt_utc = dt_local.astimezone(timezone.utc)
 
-    threshold = st.sidebar.slider("スコア閾値", 0.1, 1.0, 0.8, 0.01)
-
-    if st.sidebar.button("予測を取得"):
+    if st.sidebar.button("異常度を確認"):
         with st.spinner(f"{dt_utc.isoformat()} のデータ取得中…"):
             try:
                 feature_list = fetch_features_for_datetime(dt_utc)
+                df_pred = fetch_predictions(feature_list)
+                # 列名が「0」なので「label」に変更
+                df_pred.columns = ["label"]
+                # 1 → 正常, -1 → 異常 にマッピング
+                df_pred["status"] = df_pred["label"].map({1: "正常", -1: "異常"})
+
                 if not feature_list:
                     st.warning("指定日時のデータが見つかりませんでした。")
                     return
@@ -77,15 +81,14 @@ def main():
                 return
 
         if "score" in df_pred.columns:
-            df_filtered = df_pred[df_pred["score"] >= threshold]
-            st.write(f"閾値 {threshold} 以上: {len(df_filtered)} 件")
-            st.dataframe(df_filtered.sort_values("score", ascending=False))
+            st.subheader("判定結果")
+            st.write(df_pred[["status"]])
         else:
-            st.write("予測結果スコア:")
+            st.write("予測結果スコア（-1 → 異常, 1 → 正常）:")
             st.dataframe(df_pred)
 
     else:
-        st.info("「予測を取得」ボタンを押してください")
+        st.info("異常度を確認」ボタンを押してください")
 
 
 if __name__ == "__main__":
