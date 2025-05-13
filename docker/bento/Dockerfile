@@ -1,5 +1,5 @@
 # ---------- 1. builder stage ----------
-FROM python:3.11-slim AS builder
+FROM --platform=linux/amd64 python:3.11-slim AS builder
 
 # ビルドに必要なツールをインストール
 RUN apt-get update \
@@ -20,8 +20,7 @@ RUN pip install --no-cache-dir \
   pyarrow==16.1.0
 
 # ---------- 2. runtime stage ----------
-FROM python:3.11-slim
-FROM python:3.11-slim
+FROM --platform=linux/amd64 python:3.11-slim
 RUN apt-get update && \
   apt-get install -y --no-install-recommends libgomp1 graphviz && \
   rm -rf /var/lib/apt/lists/*

@@ -10,7 +10,7 @@ def load_latest_model_from_registry(model_name: str, stage: str) -> None:
     モデルを Registry からロード
     """
     # BentoML からモデルをランナーとしてロード
-    runner = bentoml.lightgbm.get(model_name + ":" + stage).to_runner()
+    runner = bentoml.sklearn.get(model_name + ":" + stage).to_runner()
     runner.init_local()  # Runner を初期化
     return
 
