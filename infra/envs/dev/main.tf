@@ -1,3 +1,4 @@
+# プロジェクトサービス
 module "project_services" {
   source  = "terraform-google-modules/project-factory/google//modules/project_services"
   version = "~> 14.0"
@@ -11,6 +12,7 @@ module "project_services" {
   ]
 }
 
+# VPC アクセスコネクタ
 resource "google_vpc_access_connector" "serverless" {
   project       = var.project_id
   name          = "serverless-conn"
@@ -19,6 +21,7 @@ resource "google_vpc_access_connector" "serverless" {
   ip_cidr_range = "10.8.0.0/28"
 }
 
+# Artifact Registry
 module "artifact_registry" {
   source  = "GoogleCloudPlatform/artifact-registry/google"
   version = "~> 0.3"
@@ -27,6 +30,20 @@ module "artifact_registry" {
   location      = var.region
   format        = "DOCKER"
   repository_id = "portfolio-docker-${var.env}" # env=dev|prod
+}
+
+# Snowflake のユーザ名を Secret Manager から取得
+data "google_secret_manager_secret_version" "snowflake_user" {
+  project = var.project_id
+  secret  = "snowflake-user"
+  version = "latest"
+}
+
+# Snowflake のパスワードを Secret Manager から取得
+data "google_secret_manager_secret_version" "snowflake_pass" {
+  project = var.project_id
+  secret  = "snowflake-pass"
+  version = "latest"
 }
 
 # BentoML API
@@ -60,7 +77,9 @@ module "cloud_run_streamlit" {
   vpc_connector = google_vpc_access_connector.serverless.id
 
   env_vars = {
-    BENTO_API_URL = "https://bento-api-${var.env}-${var.region}.run.app/predict"
+    BENTO_API_URL      = "https://bento-api-${var.env}-${var.region}.run.app/predict"
+    SNOWFLAKE_USER     = data.google_secret_manager_secret_version.snowflake_user.secret_data
+    SNOWFLAKE_PASSWORD = data.google_secret_manager_secret_version.snowflake_pass.secret_data
   }
 
   depends_on = [
