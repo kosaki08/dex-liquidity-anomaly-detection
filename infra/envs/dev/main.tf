@@ -76,17 +76,30 @@ module "cloud_run_streamlit" {
   image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${var.env}/streamlit:${var.image_tag}"
   container_port = 8501
 
+  # VPC アクセスコネクタ
   vpc_connector = google_vpc_access_connector.serverless.id
 
+  # サービスアカウントを指定
+  service_account_email = google_service_account.streamlit.email
+
   env_vars = {
-    BENTO_API_URL      = "https://bento-api-${var.env}-${var.region}.run.app/predict"
-    SNOWFLAKE_USER     = data.google_secret_manager_secret_version.snowflake_user.secret_data
-    SNOWFLAKE_PASSWORD = data.google_secret_manager_secret_version.snowflake_pass.secret_data
+    BENTO_API_URL = "https://bento-api-${var.env}-${var.region}.run.app/predict"
+  }
+
+  secret_env_vars = {
+    SNOWFLAKE_PASSWORD = {
+      secret  = "snowflake-pass"
+      version = "latest"
+    }
+    SNOWFLAKE_USER = {
+      secret  = "snowflake-user"
+      version = "latest"
+    }
   }
 
   depends_on = [
     module.artifact_registry,
-    module.cloud_run_bento,
+    google_secret_manager_secret_iam_member.streamlit_sa_access
   ]
 }
 

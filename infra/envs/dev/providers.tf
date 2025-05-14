@@ -1,11 +1,9 @@
 provider "google" {
-  project                     = var.project_id
-  region                      = var.region
-  impersonate_service_account = var.tf_service_account_email
+  project = var.project_id
+  region  = var.region
 }
 
 provider "google-beta" {
-  project                     = var.project_id
-  region                      = var.region
-  impersonate_service_account = var.tf_service_account_email
+  project = var.project_id
+  region  = var.region
 }

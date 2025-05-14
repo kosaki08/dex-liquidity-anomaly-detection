@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   cloud_build:
     runs-on: ubuntu-latest
@@ -24,9 +28,11 @@ jobs:
 
       # 2) GCP 認証：Auth
       - name: Authenticate to GCP
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: "projects/${{ secrets.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider"
+          service_account: tf-svc@${{ secrets.PROJECT_ID }}.iam.gserviceaccount.com
+          audience: "https://github.com/${{ github.repository }}"
 
       # 3) gcloud CLI をセットアップ
       - name: Set up gcloud
@@ -41,31 +47,3 @@ jobs:
             --config=cloudbuild.yaml \
             --substitutions="_ENV=dev,_REPO=portfolio-docker-dev,_PROJECT_ID=$PROJECT_ID,_TF_SA_EMAIL=$TF_SA_EMAIL,_ARTIFACTS_BUCKET=$ARTIFACTS_BUCKET" \
             .
-
-      # 5) Terraform のセットアップ
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-
-      # 6) Terraform 初期化
-      - name: Terraform Init
-        working-directory: infra/envs/${{ env.ENV }}
-        run: terraform init \
-          -backend-config="bucket=terraform-state-portfolio-dex" \
-          -backend-config="prefix=${{ env.ENV }}"
-
-      # 7) Terraform Plan
-      - name: Terraform Plan
-        working-directory: infra/envs/${{ env.ENV }}
-        run: |
-          terraform plan -out=tfplan \
-            -var="project_id=${{ env.PROJECT_ID }}" \
-            -var="tf_service_account_email=${{ env.TF_SA_EMAIL }}" \
-            -var="env=${{ env.ENV }}" \
-            -var="artifacts_bucket=${{ env.ARTIFACTS_BUCKET }}" \
-            -var="image_tag=${{ env.IMAGE_TAG }}"
-
-      # 8) Terraform Apply
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        working-directory: infra/envs/${{ env.ENV }}
-        run: terraform apply -auto-approve tfplan

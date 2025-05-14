@@ -47,3 +47,9 @@ variable "container_port" {
   description = "コンテナ内アプリが LISTEN するポート番号"
   default     = 3000
 }
+
+variable "service_account_email" {
+  type        = string
+  description = "Cloud Run サービスアカウント"
+  default     = null
+}

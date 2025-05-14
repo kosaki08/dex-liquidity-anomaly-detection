@@ -4,8 +4,13 @@ resource "google_cloud_run_v2_service" "default" {
   location = var.location
 
   template {
+    # インスタンス数の上限
     max_instance_request_concurrency = var.concurrency
 
+    # サービスアカウントを指定
+    service_account = var.service_account_email != "" ? var.service_account_email : null
+
+    # コンテナ
     containers {
       image = var.image
 
@@ -25,6 +30,19 @@ resource "google_cloud_run_v2_service" "default" {
         content {
           name  = env.key
           value = env.value
+        }
+      }
+
+      dynamic "env" {
+        for_each = var.secret_env_vars
+        content {
+          name = env.key
+          value_source {
+            secret_key_ref {
+              secret  = env.value.secret  # "snowflake-pass"
+              version = env.value.version # "latest"
+            }
+          }
         }
       }
     }
