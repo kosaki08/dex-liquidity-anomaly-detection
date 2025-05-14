@@ -1,9 +1,13 @@
 substitutions:
-  _ENV: "dev" # dev/prod を切り替え
-  _REPO: "portfolio-docker-${_ENV}"
+  _ENV: "" # dev / prod
+  _REPO: "" # portfolio-docker-${_ENV}
+  _PROJECT_ID: "" # GCP プロジェクト ID
+  _TF_SA_EMAIL: "" # Terraform 用サービスアカウント
+  _ARTIFACTS_BUCKET: "" # MLflow artifacts 用 GCS バケット
 
 steps:
   # 1) Docker イメージをビルドして GCP Artifact Registry へプッシュ
+  # Bento
   - id: "Build & Push Bento"
     name: "gcr.io/cloud-builders/docker"
     args:
@@ -12,13 +16,14 @@ steps:
         "build",
         "--platform=linux/amd64",
         "-t",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/bento:$BUILD_ID",
+        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:$BUILD_ID",
         "--push",
         "-f",
         "docker/bento/Dockerfile",
         ".",
       ]
 
+  # Streamlit
   - id: "Build & Push Streamlit"
     name: "gcr.io/cloud-builders/docker"
     args:
@@ -27,12 +32,13 @@ steps:
         "build",
         "--platform=linux/amd64",
         "-t",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/streamlit:$BUILD_ID",
+        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:$BUILD_ID",
         "-f",
         "docker/streamlit/Dockerfile",
         ".",
       ]
 
+  # MLflow
   - id: "Build & Push MLflow"
     name: "gcr.io/cloud-builders/docker"
     args:
@@ -41,7 +47,7 @@ steps:
         "build",
         "--platform=linux/amd64",
         "-t",
-        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/mlflow:$BUILD_ID",
+        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/mlflow:$BUILD_ID",
         "-f",
         "docker/mlflow/Dockerfile",
         ".",
@@ -67,7 +73,11 @@ steps:
       [
         "-chdir=infra/envs/${_ENV}",
         "plan",
-        "-var=image_tag=$BUILD_ID",
+        "-var=project_id=${_PROJECT_ID}",
+        "-var=tf_service_account_email=${_TF_SA_EMAIL}",
+        "-var=env=${_ENV}",
+        "-var=artifacts_bucket=${_ARTIFACTS_BUCKET}",
+        "-var=image_tag=${BUILD_ID}",
         "-out=tfplan",
         "-input=false",
       ]
@@ -75,9 +85,22 @@ steps:
   # 4) Terraform Apply (main ブランチ or prod タグの場合のみ)
   - id: "Terraform Apply"
     name: "hashicorp/terraform:1.11.4"
-    args: ["-chdir=infra/envs/${_ENV}", "apply", "-auto-approve", "tfplan"]
+    args:
+      [
+        "-chdir=infra/envs/${_ENV}",
+        "apply",
+        "-var=project_id=${_PROJECT_ID}",
+        "-var=tf_service_account_email=${_TF_SA_EMAIL}",
+        "-var=env=${_ENV}",
+        "-var=artifacts_bucket=${_ARTIFACTS_BUCKET}",
+        "-var=image_tag=${BUILD_ID}",
+        "-out=tfplan",
+        "-input=false",
+        "-auto-approve",
+        "tfplan",
+      ]
 
 images:
-  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/bento:$BUILD_ID"
-  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/streamlit:$BUILD_ID"
-  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/mlflow:$BUILD_ID"
+  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:$BUILD_ID"
+  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:$BUILD_ID"
+  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/mlflow:$BUILD_ID"

@@ -9,6 +9,8 @@ module "project_services" {
     "artifactregistry.googleapis.com",
     "run.googleapis.com",
     "vpcaccess.googleapis.com",
+    "iamcredentials.googleapis.com",
+    "secretmanager.googleapis.com",
   ]
 }
 
