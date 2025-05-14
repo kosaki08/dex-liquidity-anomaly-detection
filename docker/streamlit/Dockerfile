@@ -1,5 +1,5 @@
 # ---------- 1. builder stage ----------
-FROM python:3.11-slim AS builder
+FROM --platform=linux/amd64 python:3.11-slim AS builder
 
 WORKDIR /build
 
@@ -15,7 +15,7 @@ COPY docker/streamlit/requirements.txt ./requirements.txt
 RUN pip wheel --no-cache-dir -r requirements.txt -w /wheels
 
 # ---------- 2. runtime stage ----------
-FROM python:3.11-slim
+FROM --platform=linux/amd64 python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
   STREAMLIT_SERVER_HEADLESS=true \

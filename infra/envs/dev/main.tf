@@ -38,6 +38,9 @@ module "cloud_run_bento" {
   vpc_connector  = google_vpc_access_connector.serverless.id
   container_port = 3000
 
+  depends_on = [
+    module.artifact_registry
+  ]
 
   env_vars = {
     MLFLOW_TRACKING_URI = "http://mlflow:5000"

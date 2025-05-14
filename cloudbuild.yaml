@@ -1,0 +1,76 @@
+substitutions:
+  _ENV: "dev" # dev/prod を切り替え
+  _REPO: "portfolio-docker-${_ENV}"
+
+steps:
+  # 1) Docker イメージをビルドして GCP Artifact Registry へプッシュ
+  - id: "Build & Push Bento"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "buildx",
+        "build",
+        "--platform=linux/amd64",
+        "-t",
+        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/bento:$BUILD_ID",
+        "--push",
+        "-f",
+        "docker/bento/Dockerfile",
+        ".",
+      ]
+
+  - id: "Build & Push Streamlit"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "buildx",
+        "build",
+        "--platform=linux/amd64",
+        "-t",
+        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/streamlit:$BUILD_ID",
+        "-f",
+        "docker/streamlit/Dockerfile",
+        ".",
+      ]
+
+  - id: "Build & Push MLflow"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "buildx",
+        "build",
+        "--platform=linux/amd64",
+        "-t",
+        "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/mlflow:$BUILD_ID",
+        "-f",
+        "docker/mlflow/Dockerfile",
+        ".",
+      ]
+
+  # 2) Terraform 初期化
+  - id: "Terraform Init"
+    name: "hashicorp/terraform:1.11.4"
+    entrypoint: "sh"
+    args: [
+        "-c",
+        "cd infra/envs/${_ENV} && \
+        terraform init \
+        -backend-config=bucket=terraform-state-portfolio-dex \
+        -backend-config=prefix=${_ENV}",
+        -reconfigure",
+      ]
+
+  # 3) Terraform Plan
+  - id: "Terraform Plan"
+    name: "hashicorp/terraform:1.11.4"
+    args: ["-chdir=infra/envs/${_ENV}", "plan", "-out=tfplan", "-input=false"]
+
+  # 4) Terraform Apply (main ブランチ or prod タグの場合のみ)
+  - id: "Terraform Apply"
+    name: "hashicorp/terraform:1.11.4"
+    args: ["-chdir=infra/envs/${_ENV}", "apply", "-auto-approve", "tfplan"]
+
+images:
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/bento:$BUILD_ID"
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/streamlit:$BUILD_ID"
+  - "asia-northeast1-docker.pkg.dev/$PROJECT_ID/${_REPO}/mlflow:$BUILD_ID"

@@ -93,12 +93,14 @@
 
 ## 環境構築
 
-### 利用バージョン等
+### 利用サービス等
 
+- gcloud CLI
+- Cloud Build API／Artifact Registry API／Secret Manager API
 - Docker & Docker Compose
 - Python 3.11+
-- The Graph API key
-- Snowflake アカウント
+- The Graph API
+- Snowflake
 
 ### セットアップ
 
