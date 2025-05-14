@@ -17,3 +17,13 @@ variable "env" {
   type        = string
   description = "環境識別子 (dev|prod)"
 }
+
+variable "image_tag" {
+  description = "Cloud Build でビルドされたコンテナイメージのタグ"
+  type        = string
+}
+
+variable "artifacts_bucket" {
+  description = "MLflow のアーティファクトを置く GCS バケット名"
+  type        = string
+}

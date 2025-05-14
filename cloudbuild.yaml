@@ -63,7 +63,14 @@ steps:
   # 3) Terraform Plan
   - id: "Terraform Plan"
     name: "hashicorp/terraform:1.11.4"
-    args: ["-chdir=infra/envs/${_ENV}", "plan", "-out=tfplan", "-input=false"]
+    args:
+      [
+        "-chdir=infra/envs/${_ENV}",
+        "plan",
+        "-var=image_tag=$BUILD_ID",
+        "-out=tfplan",
+        "-input=false",
+      ]
 
   # 4) Terraform Apply (main ブランチ or prod タグの場合のみ)
   - id: "Terraform Apply"

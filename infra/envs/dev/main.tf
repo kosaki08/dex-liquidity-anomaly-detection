@@ -29,6 +29,7 @@ module "artifact_registry" {
   repository_id = "portfolio-docker-${var.env}" # env=dev|prod
 }
 
+# BentoML API
 module "cloud_run_bento" {
   source         = "../../modules/cloud_run"
   project_id     = var.project_id
@@ -47,3 +48,44 @@ module "cloud_run_bento" {
   }
 }
 
+# Streamlit ダッシュボード
+module "cloud_run_streamlit" {
+  source         = "../../modules/cloud_run"
+  project_id     = var.project_id
+  name           = "streamlit-${var.env}"
+  location       = var.region
+  image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${var.env}/streamlit:${var.image_tag}"
+  container_port = 8501
+
+  vpc_connector = google_vpc_access_connector.serverless.id
+
+  env_vars = {
+    BENTO_API_URL = "https://bento-api-${var.env}-${var.region}.run.app/predict"
+  }
+
+  depends_on = [
+    module.artifact_registry,
+    module.cloud_run_bento,
+  ]
+}
+
+# MLflow
+module "cloud_run_mlflow" {
+  source         = "../../modules/cloud_run"
+  project_id     = var.project_id
+  name           = "mlflow-${var.env}"
+  location       = var.region
+  image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${var.env}/mlflow:${var.image_tag}"
+  container_port = 5000
+
+  vpc_connector = google_vpc_access_connector.serverless.id
+
+  env_vars = {
+    ARTIFACT_ROOT        = "gs://${var.artifacts_bucket}/mlflow-artifacts"
+    BACKEND_DATABASE_URL = "postgresql://user:pass@host:5432/mlflow"
+  }
+
+  depends_on = [
+    module.artifact_registry,
+  ]
+}
