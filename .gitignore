@@ -4,6 +4,9 @@ data/raw
 # ローカル設定ファイルや.env
 .env
 
+# Service Account JSON キー
+sa-key.json
+
 # その他
 .DS_Store
 .ipynb_checkpoints/

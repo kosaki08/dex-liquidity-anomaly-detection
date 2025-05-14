@@ -11,6 +11,9 @@ __pycache__/
 .devcontainer/
 .vscode/
 
+# Service Account JSON キー
+sa-key.json
+
 # データ & キャッシュ
 data/
 mlruns/

@@ -18,6 +18,7 @@
 - 週次再学習 DAG（`retrain_iforest`）
 - 毎時推論 DAG（`predict_pool_iforest`）
 - BentoML API & Streamlit ダッシュボード
+- CI/CD（GitHub Actions）ワークフロー
 
 **🚧 開発中**
 
@@ -30,7 +31,6 @@
 - Streamlit 上で１ヶ月分の時系列データと予測スコアを並べて表示
 - Precision\@10／Recall\@10 推移グラフの実装
 - Snowflake から BigQuery への外部テーブル移行
-- CI/CD（GitHub Actions）ワークフロー
 - シークレット管理強化（Vault）
 
 ## アーキテクチャ

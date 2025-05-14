@@ -4,6 +4,9 @@ data/raw
 # ローカル設定ファイルや.env
 .env
 
+# Service Account JSON キー
+sa-key.json
+
 # Pythonキャッシュやビルド生成物
 __pycache__/
 *.pyc
