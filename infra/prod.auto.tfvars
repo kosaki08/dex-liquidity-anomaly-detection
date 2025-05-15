@@ -1,5 +1,2 @@
-project_id = "portfolio-dex-prod"
-region     = "asia-northeast1"
 image_tag  = "latest"
-artifacts_bucket = "portfolio-dex-mlflow-artifacts"
 tf_service_account_email = "placeholder"
