@@ -1,14 +1,10 @@
-# -------- 置換変数 --------
+# 置換変数
 substitutions:
-  _TF_WORKSPACE: "dev" # dev / prod
   _PROJECT_ID: "portfolio-dex-dev"
   _REPO: "portfolio-docker-dev" # _PROJECT_ID に依存しない文字列
-  _ARTIFACTS_BUCKET: "portfolio-dex-mlflow-artifacts"
   _IMAGE_TAG: "local" # Pull Request ビルドなど
-  _APPLY_PROD: "no" # 手動で yes に切り替える
 
 steps:
-  # -------- Docker build --------
   # Bento
   - id: "Build & Push Bento"
     name: "gcr.io/cloud-builders/docker"
@@ -57,26 +53,7 @@ steps:
         ".",
       ]
 
-  # -------- Terraform (Makefile ラッパ) --------
-  - id: "Terraform"
-    name: "hashicorp/terraform:1.11.4"
-    entrypoint: sh
-    env:
-      - "PROJECT_ID=${_PROJECT_ID}"
-      - "ARTIFACTS_BUCKET=${_ARTIFACTS_BUCKET}"
-    args:
-      - -c
-      - |
-        apk add --no-cache make
-        cd infra
-        make init
-        make plan WORKSPACE=${_TF_WORKSPACE}
-        # dev は常に apply / prod は _APPLY_PROD=yes のときだけ
-        if [ "${_TF_WORKSPACE}" = "dev" ] || [ "${_APPLY_PROD}" = "yes" ]; then
-          make apply WORKSPACE=${_TF_WORKSPACE} AUTOAPPROVE=-auto-approve
-        fi
-
-# -------- 成果物 URI --------
+# 成果物 URI
 images:
   - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:${_IMAGE_TAG}"
   - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:${_IMAGE_TAG}"
