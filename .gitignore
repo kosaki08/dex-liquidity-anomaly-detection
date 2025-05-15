@@ -36,10 +36,6 @@ mlruns/
 terraform.tfstate
 terraform.tfstate.backup
 
-# Terraform variables
-*.tfvars
-*.tfvars.json
-
 # Terraform override files
 override.tf
 override.tf.json

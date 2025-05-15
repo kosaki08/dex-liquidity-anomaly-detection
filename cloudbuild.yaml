@@ -1,12 +1,14 @@
+# -------- 置換変数 --------
 substitutions:
-  _ENV: "" # dev / prod
-  _REPO: "" # portfolio-docker-${_ENV}
-  _PROJECT_ID: "" # GCP プロジェクト ID
-  _TF_SA_EMAIL: "" # Terraform 用サービスアカウント
-  _ARTIFACTS_BUCKET: "" # MLflow artifacts 用 GCS バケット
+  _TF_WORKSPACE: "dev" # dev / prod
+  _PROJECT_ID: "portfolio-dex-dev"
+  _REPO: "portfolio-docker-dev" # _PROJECT_ID に依存しない文字列
+  _ARTIFACTS_BUCKET: "portfolio-dex-mlflow-artifacts"
+  _IMAGE_TAG: "local" # Pull Request ビルドなど
+  _APPLY_PROD: "no" # 手動で yes に切り替える
 
 steps:
-  # 1) Docker イメージをビルドして GCP Artifact Registry へプッシュ
+  # -------- Docker build --------
   # Bento
   - id: "Build & Push Bento"
     name: "gcr.io/cloud-builders/docker"
@@ -16,7 +18,7 @@ steps:
         "build",
         "--platform=linux/amd64",
         "-t",
-        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:$BUILD_ID",
+        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:${_IMAGE_TAG}",
         "--push",
         "-f",
         "docker/bento/Dockerfile",
@@ -32,7 +34,7 @@ steps:
         "build",
         "--platform=linux/amd64",
         "-t",
-        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:$BUILD_ID",
+        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:${_IMAGE_TAG}",
         "--push",
         "-f",
         "docker/streamlit/Dockerfile",
@@ -48,60 +50,34 @@ steps:
         "build",
         "--platform=linux/amd64",
         "-t",
-        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/mlflow:$BUILD_ID",
+        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/mlflow:${_IMAGE_TAG}",
         "--push",
         "-f",
         "docker/mlflow/Dockerfile",
         ".",
       ]
 
-  # 2) Terraform 初期化
-  - id: "Terraform Init"
+  # -------- Terraform (Makefile ラッパ) --------
+  - id: "Terraform"
     name: "hashicorp/terraform:1.11.4"
-    entrypoint: "sh"
-    args: [
-        "-c",
-        "cd infra/envs/${_ENV} && \
-        terraform init \
-        -backend-config=bucket=terraform-state-portfolio-dex \
-        -backend-config=prefix=${_ENV}",
-        -reconfigure",
-      ]
-
-  # 3) Terraform Plan
-  - id: "Terraform Plan"
-    name: "hashicorp/terraform:1.11.4"
+    entrypoint: sh
+    env:
+      - "PROJECT_ID=${_PROJECT_ID}"
+      - "ARTIFACTS_BUCKET=${_ARTIFACTS_BUCKET}"
     args:
-      [
-        "-chdir=infra/envs/${_ENV}",
-        "plan",
-        "-var=project_id=${_PROJECT_ID}",
-        "-var=tf_service_account_email=${_TF_SA_EMAIL}",
-        "-var=env=${_ENV}",
-        "-var=artifacts_bucket=${_ARTIFACTS_BUCKET}",
-        "-var=image_tag=${BUILD_ID}",
-        "-out=tfplan",
-        "-input=false",
-      ]
+      - -c
+      - |
+        apk add --no-cache make
+        cd infra
+        make init
+        make plan WORKSPACE=${_TF_WORKSPACE}
+        # dev は常に apply / prod は _APPLY_PROD=yes のときだけ
+        if [ "${_TF_WORKSPACE}" = "dev" ] || [ "${_APPLY_PROD}" = "yes" ]; then
+          make apply WORKSPACE=${_TF_WORKSPACE} AUTOAPPROVE=-auto-approve
+        fi
 
-  # 4) Terraform Apply (main ブランチ or prod タグの場合のみ)
-  - id: "Terraform Apply"
-    name: "hashicorp/terraform:1.11.4"
-    args:
-      [
-        "-chdir=infra/envs/${_ENV}",
-        "apply",
-        "-var=project_id=${_PROJECT_ID}",
-        "-var=tf_service_account_email=${_TF_SA_EMAIL}",
-        "-var=env=${_ENV}",
-        "-var=artifacts_bucket=${_ARTIFACTS_BUCKET}",
-        "-var=image_tag=${BUILD_ID}",
-        "-input=false",
-        "-auto-approve",
-        "tfplan",
-      ]
-
+# -------- 成果物 URI --------
 images:
-  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:$BUILD_ID"
-  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:$BUILD_ID"
-  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/mlflow:$BUILD_ID"
+  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:${_IMAGE_TAG}"
+  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:${_IMAGE_TAG}"
+  - "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/mlflow:${_IMAGE_TAG}"

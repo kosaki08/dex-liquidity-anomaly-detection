@@ -1,6 +1,6 @@
 resource "google_service_account" "streamlit" {
-  account_id   = "run-streamlit-${var.env}"
-  display_name = "Streamlit Cloud Run SA (${var.env})"
+  account_id   = "run-streamlit-${local.env}"
+  display_name = "Streamlit Cloud Run SA (${local.env})"
 }
 
 # Secret Manager Accessor 付与
@@ -10,7 +10,7 @@ resource "google_secret_manager_secret_iam_member" "streamlit_sa_access" {
     "snowflake-user",
   ])
 
-  project   = var.project_id
+  project   = local.project_id
   secret_id = each.value
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.streamlit.email}"
