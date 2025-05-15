@@ -1,7 +1,6 @@
 TF_DIR := $(CURDIR)
 
-# 引数が無ければ dev
-WORKSPACE ?= dev
+WORKSPACE ?= dev   # 引数が無ければ dev
 AUTOAPPROVE  ?=    # CI で -auto-approve を渡す用
 INIT_FLAGS ?=      # 例: "-upgrade -reconfigure"
 
@@ -12,12 +11,25 @@ select-workspace:
 	    && terraform workspace select $(WORKSPACE) \
 	    || terraform workspace new $(WORKSPACE))
 
-## 一般コマンド
+## ---------- モジュール単体テスト ----------
+.PHONY: test-modules
+test-modules: ## infra/modules/* の test.sh をすべて実行
+	for dir in infra/modules/*; do \
+	  if [ -x $$dir/test.sh ]; then \
+	    echo "▶ Testing $$dir"; \
+	    (cd $$dir && ./test.sh); \
+	  fi \
+	done
+
+## ---------- 一般コマンド ----------
 init:  ## terraform init $(INIT_FLAGS)
 	cd $(TF_DIR) && terraform init $(INIT_FLAGS)
 
-plan: select-workspace
+plan: select-workspace ## terraform plan
 	cd $(TF_DIR) && terraform plan
+
+validate: select-workspace ## terraform validate
+	cd $(TF_DIR) && terraform validate
 
 apply: guard-prod select-workspace ## terraform apply $(AUTOAPPROVE)
 	cd $(TF_DIR) && terraform apply $(AUTOAPPROVE)
