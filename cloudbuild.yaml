@@ -1,8 +1,11 @@
 # 置換変数
 substitutions:
+  _TF_WORKSPACE: "dev" # dev / prod
   _PROJECT_ID: "portfolio-dex-dev"
   _REPO: "portfolio-docker-dev" # _PROJECT_ID に依存しない文字列
+  _ARTIFACTS_BUCKET: "portfolio-dex-mlflow-artifacts"
   _IMAGE_TAG: "local" # Pull Request ビルドなど
+  _APPLY_PROD: "no" # 手動で yes に切り替える
 
 steps:
   # Bento
