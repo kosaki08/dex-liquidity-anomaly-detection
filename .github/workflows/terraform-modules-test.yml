@@ -1,0 +1,22 @@
+name: "Terraform Modules Test"
+
+on:
+  push:
+    paths:
+      - "infra/modules/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [network, cloud_run]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+      - name: Test ${{ matrix.module }}
+        working-directory: infra/modules/${{ matrix.module }}
+        run: |
+          terraform init -backend=false
+          terraform test
