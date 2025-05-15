@@ -13,11 +13,6 @@ variable "tf_service_account_email" {
   description = "TF サービスアカウントのメールアドレス"
 }
 
-variable "env" {
-  type        = string
-  description = "環境識別子 (dev|prod)"
-}
-
 variable "image_tag" {
   description = "Cloud Build でビルドされたコンテナイメージのタグ"
   type        = string

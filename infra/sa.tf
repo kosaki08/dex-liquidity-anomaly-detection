@@ -1,6 +1,6 @@
 resource "google_service_account" "streamlit" {
-  account_id   = "run-streamlit-${var.env}"
-  display_name = "Streamlit Cloud Run SA (${var.env})"
+  account_id   = "run-streamlit-${local.env}"
+  display_name = "Streamlit Cloud Run SA (${local.env})"
 }
 
 # Secret Manager Accessor 付与

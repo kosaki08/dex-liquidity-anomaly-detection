@@ -1,3 +1,7 @@
+locals {
+  env = terraform.workspace
+}
+
 # プロジェクトサービス
 module "project_services" {
   source  = "terraform-google-modules/project-factory/google//modules/project_services"
@@ -31,7 +35,7 @@ module "artifact_registry" {
   project_id    = var.project_id
   location      = var.region
   format        = "DOCKER"
-  repository_id = "portfolio-docker-${var.env}" # env=dev|prod
+  repository_id = "portfolio-docker-${local.env}" # dev|prod
 }
 
 # Snowflake のユーザ名を Secret Manager から取得
@@ -50,11 +54,11 @@ data "google_secret_manager_secret_version" "snowflake_pass" {
 
 # BentoML API
 module "cloud_run_bento" {
-  source         = "../../modules/cloud_run"
+  source         = "./modules/cloud_run"
   project_id     = var.project_id
-  name           = "bento-api-${var.env}"
+  name           = "bento-api-${local.env}"
   location       = var.region
-  image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${var.env}/bento:latest"
+  image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${local.env}/bento:latest"
   vpc_connector  = google_vpc_access_connector.serverless.id
   container_port = 3000
 
@@ -69,11 +73,11 @@ module "cloud_run_bento" {
 
 # Streamlit ダッシュボード
 module "cloud_run_streamlit" {
-  source         = "../../modules/cloud_run"
+  source         = "./modules/cloud_run"
   project_id     = var.project_id
-  name           = "streamlit-${var.env}"
+  name           = "streamlit-${local.env}"
   location       = var.region
-  image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${var.env}/streamlit:${var.image_tag}"
+  image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${local.env}/streamlit:${var.image_tag}"
   container_port = 8501
 
   # VPC アクセスコネクタ
@@ -83,7 +87,7 @@ module "cloud_run_streamlit" {
   service_account_email = google_service_account.streamlit.email
 
   env_vars = {
-    BENTO_API_URL = "https://bento-api-${var.env}-${var.region}.run.app/predict"
+    BENTO_API_URL = "https://bento-api-${local.env}-${var.region}.run.app/predict"
   }
 
   secret_env_vars = {
@@ -105,11 +109,11 @@ module "cloud_run_streamlit" {
 
 # MLflow
 module "cloud_run_mlflow" {
-  source         = "../../modules/cloud_run"
+  source         = "./modules/cloud_run"
   project_id     = var.project_id
-  name           = "mlflow-${var.env}"
+  name           = "mlflow-${local.env}"
   location       = var.region
-  image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${var.env}/mlflow:${var.image_tag}"
+  image          = "asia-northeast1-docker.pkg.dev/${var.project_id}/portfolio-docker-${local.env}/mlflow:${var.image_tag}"
   container_port = 5000
 
   vpc_connector = google_vpc_access_connector.serverless.id
