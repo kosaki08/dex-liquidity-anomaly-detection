@@ -1,4 +1,4 @@
-name: CI/CD via Cloud Build
+name: Cloud Build CI/CD
 
 on:
   push:
