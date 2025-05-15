@@ -10,7 +10,7 @@ resource "google_compute_network" "vpc" {
 resource "google_compute_subnetwork" "private" {
   project                  = var.project_id
   name                     = "${var.network_name}-subnet"
-  ip_cidr_range            = cidrsubnet(var.ip_cidr_range, 4, 0) # /24 範囲を分割
+  ip_cidr_range            = var.subnet_ip_cidr_range
   region                   = var.region
   network                  = google_compute_network.vpc.id
   private_ip_google_access = true # Secret Manager など Private Google APIs に到達するため設定
@@ -34,7 +34,6 @@ resource "google_compute_firewall" "allow_egress_internet" {
   direction = "EGRESS"
   allow {
     protocol = "all"
-    ports    = ["0-65535"]
   }
   destination_ranges = ["0.0.0.0/0"]
   priority           = 65534
