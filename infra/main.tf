@@ -18,13 +18,16 @@ module "project_services" {
   ]
 }
 
-# VPC アクセスコネクタ
-resource "google_vpc_access_connector" "serverless" {
-  project       = local.project_id
-  name          = "serverless-conn"
-  region        = local.region
-  network       = "default"
-  ip_cidr_range = "10.8.0.0/28"
+# VPC ネットワーク
+module "network" {
+  source                  = "./modules/network"
+  project_id              = local.project_id
+  region                  = local.region
+  network_name            = "dex-network-${local.env}"
+  vpc_connector_name      = "serverless-conn"
+  subnet_ip_cidr_range    = "10.9.0.0/24"
+  connector_ip_cidr_range = "10.8.0.0/28"
+  # enable_cloud_nat        = true
 }
 
 # Artifact Registry
@@ -59,7 +62,7 @@ module "cloud_run_bento" {
   name           = "bento-api-${local.env}"
   location       = local.region
   image          = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env}/bento:latest"
-  vpc_connector  = google_vpc_access_connector.serverless.id
+  vpc_connector  = module.network.connector_id
   container_port = 3000
 
   depends_on = [
@@ -81,7 +84,7 @@ module "cloud_run_streamlit" {
   container_port = 8501
 
   # VPC アクセスコネクタ
-  vpc_connector = google_vpc_access_connector.serverless.id
+  vpc_connector = module.network.connector_id
 
   # サービスアカウントを指定
   service_account_email = google_service_account.streamlit.email
@@ -116,7 +119,7 @@ module "cloud_run_mlflow" {
   image          = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env}/mlflow:${var.image_tag}"
   container_port = 5000
 
-  vpc_connector = google_vpc_access_connector.serverless.id
+  vpc_connector = module.network.connector_id
 
   env_vars = {
     ARTIFACT_ROOT        = "gs://${local.artifacts_bucket}/mlflow-artifacts"
