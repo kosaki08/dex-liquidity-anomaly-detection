@@ -14,6 +14,11 @@ resource "google_compute_subnetwork" "private" {
   region                   = var.region
   network                  = google_compute_network.vpc.id
   private_ip_google_access = true # Secret Manager など Private Google APIs に到達するため設定
+  log_config {
+    aggregation_interval = "INTERVAL_5_MIN"       # ログ集計間隔5分ごと
+    flow_sampling        = 0.5                    # サンプリング率50%
+    metadata             = "INCLUDE_ALL_METADATA" # メタデータを含める
+  }
 }
 
 # 3) Serverless VPC Access Connector
@@ -26,6 +31,7 @@ resource "google_vpc_access_connector" "connector" {
 }
 
 # 4) インターネットへのアウトバウンドを許可
+# tfsec:ignore:google-compute-no-public-egress # GCP Private Google Access 向けのため許容
 resource "google_compute_firewall" "allow_egress_internet" {
   name    = "${var.network_name}-egress"
   project = var.project_id
@@ -35,6 +41,8 @@ resource "google_compute_firewall" "allow_egress_internet" {
   allow {
     protocol = "all"
   }
-  destination_ranges = ["0.0.0.0/0"]
+
+  # プライベートGoogleアクセスアドレスのみが許可しているため、　tfsec　の警告を　ignore
+  destination_ranges = ["199.36.153.4/30"] # GCP Private Google Access 範囲
   priority           = 65534
 }

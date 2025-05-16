@@ -53,3 +53,9 @@ variable "service_account_email" {
   description = "Cloud Run サービスアカウント"
   default     = null
 }
+
+variable "cpu" {
+  description = "コンテナ CPU リミット"
+  type        = string
+  default     = "1000m"
+}

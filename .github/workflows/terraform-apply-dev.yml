@@ -17,6 +17,8 @@ jobs:
     concurrency:
       group: terraform-dev-apply
       cancel-in-progress: false # デプロイ中はキャンセルしない
+    env:
+      TF_WORKSPACE: dev
     steps:
       # 1) リポジトリのチェックアウト
       - name: Checkout repository
@@ -38,10 +40,8 @@ jobs:
 
       # 4) Terraform の初期化
       - name: Initialize Terraform
-        run: terraform -chdir=infra init
+        run: terraform -chdir=infra init -input=false
 
       # 5) Terraform の適用
       - name: Apply Terraform
-        run: terraform -chdir=infra apply \
-          -input=false -auto-approve \
-          -lock-timeout=300s
+        run: terraform -chdir=infra apply -input=false -auto-approve -lock-timeout=300s
