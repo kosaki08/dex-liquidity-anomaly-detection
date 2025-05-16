@@ -27,8 +27,16 @@ module "network" {
   vpc_connector_name      = "serverless-conn"
   subnet_ip_cidr_range    = "10.9.0.0/24"
   connector_ip_cidr_range = "10.8.0.0/28"
-  # enable_cloud_nat        = true
 }
+
+# サービスアカウント
+module "service_accounts" {
+  source     = "./modules/service_accounts"
+  project_id = local.project_id
+  sa_names   = ["bento", "streamlit", "airflow"]
+  env        = local.env
+}
+
 
 # Artifact Registry
 module "artifact_registry" {
@@ -39,20 +47,6 @@ module "artifact_registry" {
   location      = local.region
   format        = "DOCKER"
   repository_id = "portfolio-docker-${local.env}" # dev|prod
-}
-
-# Snowflake のユーザ名を Secret Manager から取得
-data "google_secret_manager_secret_version" "snowflake_user" {
-  project = local.project_id
-  secret  = "snowflake-user"
-  version = "latest"
-}
-
-# Snowflake のパスワードを Secret Manager から取得
-data "google_secret_manager_secret_version" "snowflake_pass" {
-  project = local.project_id
-  secret  = "snowflake-pass"
-  version = "latest"
 }
 
 # BentoML API
@@ -87,7 +81,7 @@ module "cloud_run_streamlit" {
   vpc_connector = module.network.connector_id
 
   # サービスアカウントを指定
-  service_account_email = google_service_account.streamlit.email
+  service_account_email = module.service_accounts.emails["streamlit"]
 
   env_vars = {
     BENTO_API_URL = "https://bento-api-${local.env}-${local.region}.run.app/predict"

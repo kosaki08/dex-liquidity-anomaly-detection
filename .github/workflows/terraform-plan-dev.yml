@@ -1,6 +1,11 @@
 # dev へのプラン実行用
 name: "Terraform Plan (dev)"
 
+# パーミッション設定
+permissions:
+  contents: read # ソースチェックアウト用
+  id-token: write # OIDC トークン発行用
+
 on:
   pull_request:
     branches: [dev]
@@ -9,4 +14,6 @@ on:
 jobs:
   call-plan:
     uses: ./.github/workflows/_terraform-plan.yml
-    with: { workspace: dev }
+    with:
+      workspace: dev
+    secrets: inherit
