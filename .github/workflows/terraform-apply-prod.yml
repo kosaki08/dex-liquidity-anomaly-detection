@@ -16,6 +16,8 @@ jobs:
     concurrency:
       group: terraform-prod-apply
       cancel-in-progress: false # デプロイ中はキャンセルしない
+    env:
+      TF_WORKSPACE: prod
     steps:
       # 1) リポジトリのチェックアウト
       - name: Checkout repository
@@ -39,10 +41,6 @@ jobs:
       - name: Initialize Terraform
         run: terraform -chdir=infra init -input=false
 
-      # 5) ワークスペースの選択
-      - name: Select workspace
-        run: terraform -chdir=infra workspace select -or-create prod
-
-      # 6) Terraform の適用
+      # 5) Terraform の適用
       - name: Apply Terraform
         run: terraform -chdir=infra apply -input=false -auto-approve -lock-timeout=300s
