@@ -1,0 +1,30 @@
+name: "Terraform Modules Test"
+
+on:
+  push:
+    branches: [dev, main]
+    paths: ["infra/modules/**"]
+  pull_request:
+    branches: [dev, main]
+    paths: ["infra/modules/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [network]
+    steps:
+      # 1) リポジトリのチェックアウト
+      - uses: actions/checkout@v4
+
+      # 2) Terraform をセットアップ
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      # 3) モジュールのテスト
+      - name: Test ${{ matrix.module }}
+        working-directory: infra/modules/${{ matrix.module }}
+        run: |
+          terraform init -backend=false
+          terraform test

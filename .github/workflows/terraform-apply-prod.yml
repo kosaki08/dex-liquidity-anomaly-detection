@@ -1,0 +1,39 @@
+# prod への手動デプロイ用
+name: "Terraform Apply (prod)"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: terraform-prod-apply
+      cancel-in-progress: false # デプロイ中はキャンセルしない
+    steps:
+      # 1) リポジトリのチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2) GCP 認証：Auth
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/${{ secrets.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider
+          service_account: tf-svc@${{ secrets.PROJECT_ID }}.iam.gserviceaccount.com
+          audience: https://github.com/${{ github.repository }}
+
+      # 3) Terraform をセットアップ
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      # 4) Terraform の初期化
+      - name: Initialize Terraform
+        run: terraform -chdir=infra init
+
+      # 5) Terraform の適用
+      - name: Apply Terraform
+        run: terraform -chdir=infra apply \
+          -input=false -auto-approve \
+          -lock-timeout=300s
