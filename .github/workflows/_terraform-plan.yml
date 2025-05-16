@@ -36,9 +36,9 @@ jobs:
 
       # 4) Terraform の初期化
       - name: Initialize Terraform
-        run: terraform -chdir=infra init
-        env:
-          TF_WORKSPACE: ${{ inputs.workspace }}
+        run: |
+          terraform -chdir=infra init -input=false
+          terraform -chdir=infra workspace select ${{ env.TF_WORKSPACE }} || terraform -chdir=infra workspace new ${{ env.TF_WORKSPACE }}
 
       # 5) Terraform の検証
       - name: Validate Terraform
