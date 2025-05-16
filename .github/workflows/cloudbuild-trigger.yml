@@ -1,4 +1,4 @@
-name: CI/CD via Cloud Build
+name: Cloud Build CI/CD
 
 on:
   push:
@@ -61,4 +61,4 @@ jobs:
 
           gcloud builds submit \
             --config cloudbuild.yaml \
-            --substitutions=_TF_WORKSPACE=${WS},_PROJECT_ID=${{ secrets.PROJECT_ID }},_REPO=${REPO},_ARTIFACTS_BUCKET=${{ secrets.ARTIFACTS_BUCKET }},_IMAGE_TAG=${{ github.sha }},_APPLY_PROD=${APPLY_PROD}
+            --substitutions=_PROJECT_ID=${{ secrets.PROJECT_ID }},_REPO=${REPO},_IMAGE_TAG=${{ github.sha }}

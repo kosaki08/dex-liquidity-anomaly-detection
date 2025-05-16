@@ -125,10 +125,10 @@ cp .env.example .env
 make setup-snowflake
 
 # Airflow & データパイプライン起動
-docker-compose up -d
+docker compose up -d
 
 # パイプラインを手動トリガー（初回データロード）
-docker-compose exec airflow airflow dags trigger dex_liquidity_raw
+docker compose exec airflow airflow dags trigger dex_liquidity_raw
 ```
 
 4. dbt による変換
@@ -143,13 +143,13 @@ dbt build
 - 初回／週次再学習
 
 ```bash
-docker-compose exec airflow airflow dags trigger retrain_iforest
+docker compose exec airflow airflow dags trigger retrain_iforest
 ```
 
 - 毎時推論
 
 ```bash
-docker-compose exec airflow airflow dags trigger predict_pool_iforest
+docker compose exec airflow airflow dags trigger predict_pool_iforest
 ```
 
 6. API サーバー起動

@@ -1,0 +1,54 @@
+# dev へのプラン実行用
+name: "Terraform Plan (dev)"
+
+on:
+  pull_request:
+    branches: [dev]
+    paths: ["infra/**"]
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    env:
+      TF_WORKSPACE: dev
+    concurrency:
+      group: terraform-dev-plan # 同時実行防止
+      cancel-in-progress: true # 古いプランのみキャンセル
+    steps:
+      # 1) リポジトリのチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2) Terraform をセットアップ
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.11.4
+
+      # 3) Terraform の初期化
+      - name: Initialize Terraform
+        run: terraform -chdir=infra init
+
+      # 4) Terraform の検証
+      - name: Validate Terraform
+        run: terraform -chdir=infra validate
+
+      # 5) Terraform のフォーマットチェック
+      - name: Format Check
+        run: terraform -chdir=infra fmt -check
+
+      # 6) TFLint & TFsec の実行
+      - name: TFLint & TFsec
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          tflint --chdir infra
+          tfsec infra
+
+      # 7) Terraform Plan の実行
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform -chdir=infra plan \
+            -lock-timeout=300s -no-color -detailed-exitcode \
+            -out=tfplan || \
+            [ $? -eq 2 ] || exit 1
