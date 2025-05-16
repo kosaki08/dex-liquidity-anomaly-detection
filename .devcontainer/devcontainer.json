@@ -11,7 +11,8 @@
     "ghcr.io/eitsupi/devcontainer-features/duckdb-cli:1": {},
     "ghcr.io/devcontainers/features/terraform:1": {
       "tflint": "latest"
-    }
+    },
+    "ghcr.io/dhoeric/features/tfsec:1": {}
   },
   "forwardPorts": [
     8080, // Airflow Web UI
