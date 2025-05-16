@@ -14,4 +14,6 @@ on:
 jobs:
   call-plan:
     uses: ./.github/workflows/_terraform-plan.yml
-    with: { workspace: prod }
+    with:
+      workspace: prod
+    secrets: inherit
