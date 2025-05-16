@@ -49,20 +49,6 @@ module "artifact_registry" {
   repository_id = "portfolio-docker-${local.env}" # dev|prod
 }
 
-# Snowflake のユーザ名を Secret Manager から取得
-data "google_secret_manager_secret_version" "snowflake_user" {
-  project = local.project_id
-  secret  = "snowflake-user"
-  version = "latest"
-}
-
-# Snowflake のパスワードを Secret Manager から取得
-data "google_secret_manager_secret_version" "snowflake_pass" {
-  project = local.project_id
-  secret  = "snowflake-pass"
-  version = "latest"
-}
-
 # BentoML API
 module "cloud_run_bento" {
   source         = "./modules/cloud_run"
