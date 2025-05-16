@@ -4,6 +4,6 @@ variable "tf_service_account_email" {
 }
 
 variable "image_tag" {
-  description = "Cloud Build でビルドされたコンテナイメージのタグ"
   type        = string
+  description = "Cloud Build でビルドされたコンテナイメージのタグ"
 }
