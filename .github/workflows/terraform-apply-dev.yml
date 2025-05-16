@@ -42,6 +42,4 @@ jobs:
 
       # 5) Terraform の適用
       - name: Apply Terraform
-        run: terraform -chdir=infra apply \
-          -input=false -auto-approve \
-          -lock-timeout=300s
+        run: terraform -chdir=infra apply -input=false -auto-approve -lock-timeout=300s
