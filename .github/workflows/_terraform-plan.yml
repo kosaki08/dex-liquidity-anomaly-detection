@@ -34,23 +34,21 @@ jobs:
         with:
           terraform_version: 1.11.4
 
-      # 4) ワークスペースの選択
-      - name: Select workspace
-        run: terraform -chdir=infra workspace select ${{ env.TF_WORKSPACE }} || terraform -chdir=infra workspace new ${{ env.TF_WORKSPACE }}
-
-      # 5) Terraform の初期化
+      # 4) Terraform の初期化
       - name: Initialize Terraform
         run: terraform -chdir=infra init
+        env:
+          TF_WORKSPACE: ${{ inputs.workspace }}
 
-      # 6) Terraform の検証
+      # 5) Terraform の検証
       - name: Validate Terraform
         run: terraform -chdir=infra validate
 
-      # 7) Terraform のフォーマットチェック
+      # 6) Terraform のフォーマットチェック
       - name: Format Check
         run: terraform -chdir=infra fmt -check
 
-      # 8) tflint & tfsec のインストール
+      # 7) tflint & tfsec のインストール
       - name: Install tflint & tfsec
         run: |
           # tflint
@@ -58,13 +56,13 @@ jobs:
           # tfsec
           curl -sSL https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
 
-      # 9) TFLint & TFsec の実行
+      # 8) TFLint & TFsec の実行
       - name: Lint & Security Scan
         run: |
           tflint --chdir infra
           tfsec infra
 
-      # 10) Terraform Plan の実行
+      # 9) Terraform Plan の実行
       - name: Terraform Plan
         id: plan
         run: |
