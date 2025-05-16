@@ -14,6 +14,11 @@ resource "google_compute_subnetwork" "private" {
   region                   = var.region
   network                  = google_compute_network.vpc.id
   private_ip_google_access = true # Secret Manager など Private Google APIs に到達するため設定
+  log_config {
+    aggregation_interval = "INTERVAL_5_MIN"       # ログ集計間隔5分ごと
+    flow_sampling        = 0.5                    # サンプリング率50%
+    metadata             = "INCLUDE_ALL_METADATA" # メタデータを含める
+  }
 }
 
 # 3) Serverless VPC Access Connector
@@ -35,6 +40,6 @@ resource "google_compute_firewall" "allow_egress_internet" {
   allow {
     protocol = "all"
   }
-  destination_ranges = ["0.0.0.0/0"]
+  destination_ranges = ["199.36.153.4/30"] # GCP Private Google Access 範囲
   priority           = 65534
 }
