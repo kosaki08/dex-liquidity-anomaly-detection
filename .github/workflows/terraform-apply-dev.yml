@@ -36,14 +36,12 @@ jobs:
         with:
           terraform_version: 1.11.4
 
-      # 4) ワークスペースの選択
-      - name: Select dev workspace
-        run: terraform -chdir=infra workspace select dev || terraform -chdir=infra workspace new dev
-
-        # 5) Terraform の初期化
+      # 4) Terraform の初期化
       - name: Initialize Terraform
         run: terraform -chdir=infra init
+        env:
+          TF_WORKSPACE: dev
 
-      # 6) Terraform の適用
+      # 5) Terraform の適用
       - name: Apply Terraform
         run: terraform -chdir=infra apply -input=false -auto-approve -lock-timeout=300s
