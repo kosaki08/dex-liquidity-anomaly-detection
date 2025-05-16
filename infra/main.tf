@@ -37,6 +37,17 @@ module "service_accounts" {
   env        = local.env
 }
 
+# Secret モジュール
+module "secrets" {
+  source     = "./modules/secrets"
+  project_id = local.project_id
+
+  accessors = {
+    # Streamlit SA へ snowflake-pass / snowflake-user の accessor を付与
+    "snowflake-pass" = [module.service_accounts.emails["streamlit"]]
+    "snowflake-user" = [module.service_accounts.emails["streamlit"]]
+  }
+}
 
 # Artifact Registry
 module "artifact_registry" {
@@ -100,7 +111,7 @@ module "cloud_run_streamlit" {
 
   depends_on = [
     module.artifact_registry,
-    google_secret_manager_secret_iam_member.streamlit_sa_access
+    module.secrets
   ]
 }
 
