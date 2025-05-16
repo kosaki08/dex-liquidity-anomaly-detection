@@ -1,6 +1,11 @@
 # dev への自動デプロイ用
 name: "Terraform Apply (dev)"
 
+# パーミッション設定
+permissions:
+  contents: read
+  id-token: write
+
 on:
   push:
     branches: [dev]

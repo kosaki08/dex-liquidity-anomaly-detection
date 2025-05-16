@@ -1,6 +1,11 @@
 # prod への手動デプロイ用
 name: "Terraform Apply (prod)"
 
+# パーミッション設定
+permissions:
+  contents: read
+  id-token: write
+
 on:
   workflow_dispatch:
 
