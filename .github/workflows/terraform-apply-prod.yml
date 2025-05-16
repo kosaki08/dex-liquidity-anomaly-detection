@@ -35,13 +35,13 @@ jobs:
         with:
           terraform_version: 1.11.4
 
-      # 4) Terraform の初期化
-      - name: Initialize Terraform
-        run: terraform -chdir=infra init
-
-      # 5) ワークスペースの選択
+      # 4) ワークスペースの選択
       - name: Select prod workspace
         run: terraform -chdir=infra workspace select prod || terraform -chdir=infra workspace new prod
+
+      # 5) Terraform の初期化
+      - name: Initialize Terraform
+        run: terraform -chdir=infra init
 
       # 6) Terraform の適用
       - name: Apply Terraform
