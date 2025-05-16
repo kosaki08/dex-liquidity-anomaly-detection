@@ -1,12 +1,12 @@
-# dev へのプラン実行用
-name: "Terraform Plan (dev)"
+# prod へのプラン実行用
+name: "Terraform Plan (prod)"
 
 on:
   pull_request:
-    branches: [dev]
+    branches: [main]
     paths: ["infra/**"]
 
 jobs:
   call-plan:
     uses: ./.github/workflows/_terraform-plan.yml
-    with: { workspace: dev }
+    with: { workspace: prod }
