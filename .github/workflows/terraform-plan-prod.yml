@@ -1,6 +1,11 @@
 # prod へのプラン実行用
 name: "Terraform Plan (prod)"
 
+# パーミッション設定
+permissions:
+  contents: read # ソースチェックアウト用
+  id-token: write # OIDC トークン発行用
+
 on:
   pull_request:
     branches: [main]
