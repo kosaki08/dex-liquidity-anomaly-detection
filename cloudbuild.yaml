@@ -8,7 +8,7 @@ substitutions:
 # Secret Manager から取り出すシークレット定義
 availableSecrets:
   secretManager:
-    - versionName: "projects/${PROJECT_NUMBER}/secrets/mlflow-token/versions/latest"
+    - versionName: "projects/${PROJECT_ID}/secrets/mlflow-token/versions/latest"
       env: MLFLOW_TOKEN
 
 steps:
