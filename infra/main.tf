@@ -65,13 +65,15 @@ module "artifact_registry" {
 
 # BentoML API
 module "cloud_run_bento" {
-  source         = "./modules/cloud_run"
-  project_id     = local.project_id
-  name           = "bento-api-${local.env}"
-  location       = local.region
-  image          = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env}/bento:latest"
-  vpc_connector  = module.network.connector_id
-  container_port = 3000
+  source                = "./modules/cloud_run"
+  project_id            = local.project_id
+  name                  = "bento-api-${local.env}"
+  location              = local.region
+  image                 = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env}/bento:latest"
+  vpc_connector         = module.network.connector_id
+  container_port        = 3000
+  service_account_email = module.service_accounts.emails["bento"]
+
 
   depends_on = [
     module.artifact_registry,
