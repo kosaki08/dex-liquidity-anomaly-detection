@@ -24,7 +24,7 @@ module "network" {
   project_id              = local.project_id
   region                  = local.region
   network_name            = "dex-network-${local.env}"
-  vpc_connector_name      = "serverless-conn"
+  vpc_connector_name      = "serverless-conn-${local.env}"
   subnet_ip_cidr_range    = "10.9.0.0/24"
   connector_ip_cidr_range = "10.8.0.0/28"
 }
@@ -71,7 +71,8 @@ module "cloud_run_bento" {
   container_port = 3000
 
   depends_on = [
-    module.artifact_registry
+    module.artifact_registry,
+    module.secrets
   ]
 
   env_vars = {
