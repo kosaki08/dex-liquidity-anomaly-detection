@@ -49,15 +49,6 @@ module "secrets" {
   }
 }
 
-# サービスアカウント
-module "service_accounts" {
-  source     = "./modules/service_accounts"
-  project_id = local.project_id
-  sa_names   = ["bento", "streamlit", "airflow"]
-  env        = local.env
-}
-
-
 # Artifact Registry
 module "artifact_registry" {
   source  = "GoogleCloudPlatform/artifact-registry/google"
