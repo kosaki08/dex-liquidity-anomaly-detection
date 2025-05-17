@@ -16,20 +16,30 @@ jobs:
       packages: write
 
     steps:
-      # ソースをチェックアウト
-      - uses: actions/checkout@v4
+      # 1) リポジトリのチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # テスト用の profiles.yml を作成
+      # 2) テスト用の profiles.yml を作成
       - name: Prepare ci_profiles
         run: |
           mkdir -p ci_profiles
           cp profiles/profiles.yml ci_profiles/
 
-      # Dev Container をビルド & 起動
-      - name: Run tasks in Dev Container
+      # 3) Python をセットアップ（Python 依存を CI キャッシュに載せる）
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # 4) Dev Container をビルド & 起動
+      - name: Build & test in Dev Container
         uses: devcontainers/ci@v0.3
         with:
-          push: never
+          imageName: ghcr.io/${{ github.repository }}-devcontainer
+          cacheFrom: ghcr.io/${{ github.repository }}-devcontainer
+          push: ${{ github.event_name == 'push' && github.ref_name == 'main' && 'always' || 'never' }}
           env: ".devcontainer/devcontainer.env"
           runCmd: |
             echo "🧹 Ruff lint"
