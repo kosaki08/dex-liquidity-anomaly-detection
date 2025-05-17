@@ -46,6 +46,9 @@ module "secrets" {
     # Streamlit SA へ snowflake-pass / snowflake-user の accessor を付与
     "snowflake-pass" = [module.service_accounts.emails["streamlit"]]
     "snowflake-user" = [module.service_accounts.emails["streamlit"]]
+
+    # Bento SA へ mlflow-token の accessor を付与
+    "mlflow-token" = [module.service_accounts.emails["bento"]]
   }
 }
 
@@ -76,7 +79,14 @@ module "cloud_run_bento" {
   ]
 
   env_vars = {
-    MLFLOW_TRACKING_URI = "http://mlflow:5000"
+    MLFLOW_TRACKING_URI = "https://mlflow-${local.env}-${local.region}.run.app"
+  }
+
+  secret_env_vars = {
+    MLFLOW_TOKEN = {
+      secret  = "mlflow-token"
+      version = "latest"
+    }
   }
 }
 
