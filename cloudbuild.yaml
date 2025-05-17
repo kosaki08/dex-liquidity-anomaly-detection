@@ -18,8 +18,7 @@ steps:
     secretEnv: ["MLFLOW_TOKEN"]
     env:
       - "MLFLOW_TRACKING_URI=${_MLFLOW_TRACKING_URI}"
-    args:
-      [
+    args: [
         "buildx",
         "build",
         "--platform=linux/amd64",
@@ -29,7 +28,7 @@ steps:
         "--build-arg",
         "MLFLOW_TRACKING_URI=${_MLFLOW_TRACKING_URI}",
         "--build-arg",
-        "MLFLOW_TOKEN=${MLFLOW_TOKEN}",
+        "MLFLOW_TOKEN=$$MLFLOW_TOKEN", # シークレットから取得
         "-f",
         "docker/bento/Dockerfile",
         ".",
