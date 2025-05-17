@@ -14,8 +14,8 @@ locals {
 # Secret に対して accessor 権限を付与
 resource "google_secret_manager_secret_iam_member" "accessor" {
   for_each = {
-    for b in local.bindings :
-    "${b.secret_id}-${b.email}" => b
+    for idx, b in local.bindings :
+    "${b.secret_id}-${idx}" => b
   }
 
   project   = var.project_id
