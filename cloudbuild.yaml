@@ -15,6 +15,7 @@ steps:
   # Bento
   - id: "Build & Push Bento"
     name: "gcr.io/cloud-builders/docker"
+    secretEnv: ["MLFLOW_TOKEN"]
     env:
       - "MLFLOW_TRACKING_URI=${_MLFLOW_TRACKING_URI}"
     args:
