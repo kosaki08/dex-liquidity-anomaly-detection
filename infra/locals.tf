@@ -1,6 +1,6 @@
 locals {
   # GCP プロジェクト ID
-  project_id = terraform.workspace == "prod" ? "portfolio-dex-prod" : "portfolio-dex-dev"
+  project_id = terraform.workspace == "prod" ? "portfolio-dex-prod-460122" : "portfolio-dex-dev"
 
   # デプロイ先リージョン
   region = "asia-northeast1"
