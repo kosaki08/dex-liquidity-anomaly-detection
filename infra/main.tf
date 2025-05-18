@@ -108,7 +108,7 @@ module "cloud_run_streamlit" {
   service_account_email = module.service_accounts.emails["streamlit"]
 
   env_vars = {
-    BENTO_API_URL = "https://bento-api-${local.env}-${local.region}.run.app/predict"
+    BENTO_API_URL = module.cloud_run_bento.url
   }
 
   secret_env_vars = {
