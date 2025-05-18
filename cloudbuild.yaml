@@ -24,6 +24,8 @@ steps:
         "--platform=linux/amd64",
         "-t",
         "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:${_IMAGE_TAG}",
+        "-t",
+        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/bento:latest",
         "--push",
         "--build-arg",
         "MLFLOW_TRACKING_URI=${_MLFLOW_TRACKING_URI}",
