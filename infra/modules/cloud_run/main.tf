@@ -10,6 +10,9 @@ resource "google_cloud_run_v2_service" "default" {
     # サービスアカウントを指定
     service_account = var.service_account_email != "" ? var.service_account_email : null
 
+    # タイムアウト時間
+    timeout = "300s"
+
     # コンテナ
     containers {
       image = var.image
