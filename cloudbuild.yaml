@@ -12,24 +12,6 @@ availableSecrets:
       env: MLFLOW_TOKEN
 
 steps:
-  - id: "Debug Env"
-    name: "gcr.io/cloud-builders/gcloud"
-    entrypoint: "bash"
-    args:
-      - "-c"
-      - |
-        echo "=== Substitutions ==="
-        echo "_PROJECT_ID=${_PROJECT_ID}"
-        echo "_REPO=${_REPO}"
-        echo "_IMAGE_TAG=${_IMAGE_TAG}"
-        echo "=== Env Vars ==="
-        env
-        echo "=== Secret Access Test ==="
-
-        gcloud secrets versions access latest \
-          --secret=mlflow-token \
-          --project=${_PROJECT_ID}
-
   # Bento
   - id: "Build & Push Bento"
     name: "gcr.io/cloud-builders/docker"
