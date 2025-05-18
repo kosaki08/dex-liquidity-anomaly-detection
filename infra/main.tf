@@ -81,7 +81,7 @@ module "cloud_run_bento" {
   ]
 
   env_vars = {
-    MLFLOW_TRACKING_URI = "https://mlflow-${local.env}-${local.region}.run.app"
+    MLFLOW_TRACKING_URI = module.cloud_run_mlflow.url
   }
 
   secret_env_vars = {
