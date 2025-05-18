@@ -136,6 +136,7 @@ module "cloud_run_mlflow" {
   location       = local.region
   image          = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env}/mlflow:${var.image_tag}"
   container_port = 5000
+  memory         = "1Gi"
 
   vpc_connector = module.network.connector_id
 
