@@ -1,4 +1,6 @@
+import logging
 import os
+import sys
 from datetime import datetime, time, timezone
 
 import pandas as pd
@@ -6,13 +8,23 @@ import requests
 import streamlit as st
 from snowflake.connector import connect
 
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+
+
 # BentoML predict エンドポイント
-API_URL = os.getenv("BENTO_API_URL", "http://bento:3000/predict")
+API_URL = st.secrets["BENTO_API_URL"]
 
 
 @st.cache_data(ttl=300)
-def fetch_features_for_datetime(dt: datetime) -> list[dict]:
-    """選択された日時の直前最新レコードを Snowflake から取得し、dict のリストにして返す"""
+def fetch_features_for_datetime(data: datetime) -> list[dict]:
+    """Snowflake から指定日時直前最新のプール特徴量を1件取得して返します"""
+    logger.info(f"fetch_features_for_datetime: fetch Snowflake features at {data!r}")
     conn = connect(
         user=os.getenv("SNOWFLAKE_USER"),
         password=os.getenv("SNOWFLAKE_PASSWORD"),
@@ -31,28 +43,38 @@ def fetch_features_for_datetime(dt: datetime) -> list[dict]:
         ORDER BY hour_ts DESC
         LIMIT 1
     """
-    df = pd.read_sql(query, conn, params=[dt])
+    df = pd.read_sql(query, conn, params=[data])
     conn.close()
     # DataFrame → dict に変換
     return df.to_dict(orient="records")
 
 
-@st.cache_data(ttl=300)
 def fetch_predictions(data: list[dict]) -> pd.DataFrame:
+    """BentoML predict エンドポイントを叩いて結果を DataFrame で返します"""
     # データを "input_data" キーでラップ
     payload = {"input_data": data}
-    resp = requests.post(API_URL, json=payload, timeout=10)
+    logger.info("POST %s payload=%s", API_URL, payload)
+    try:
+        res = requests.post(API_URL, json=payload, timeout=10)
+        logger.info("API response status=%d body=%s", res.status_code, res.text[:200])
 
-    # レスポンスを確認
-    resp.raise_for_status()
-    results = resp.json()
+        # レスポンスを確認
+        res.raise_for_status()
+        preds = res.json()
 
-    # レスポンスをDataFrameに変換
-    return pd.DataFrame(results)
+        # DataFrame に変換
+        return pd.DataFrame(preds["predictions"])
+    except Exception as e:
+        logger.error("prediction failed: %s", e, exc_info=True)
+        st.error(f"データ取得 / 予測に失敗しました: {e}")
+        return pd.DataFrame()
 
 
 def main():
     st.title("DEX Volume Spike Dashboard")
+
+    # デバッグ用
+    st.write("🍵 BENTO_API_URL =", os.getenv("BENTO_API_URL"))
 
     # サイドバーで日時選択
     st.sidebar.header("日時で検索")
@@ -75,7 +97,6 @@ def main():
                 if not feature_list:
                     st.warning("指定日時のデータが見つかりませんでした。")
                     return
-                df_pred = fetch_predictions(feature_list)
             except Exception as e:
                 st.error(f"データ取得／予測に失敗しました: {e}")
                 return
