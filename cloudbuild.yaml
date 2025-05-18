@@ -45,7 +45,7 @@ steps:
         "-t",
         "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:${_IMAGE_TAG}",
         "-t",
-        "…/streamlit:latest",
+        "asia-northeast1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/streamlit:latest",
         "--push",
         "-f",
         "docker/streamlit/Dockerfile",
