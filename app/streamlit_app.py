@@ -53,6 +53,14 @@ def fetch_predictions(data: list[dict]) -> pd.DataFrame:
     """BentoML predict エンドポイントを叩いて結果を DataFrame で返します"""
     # データを "input_data" キーでラップ
     payload = {"input_data": data}
+
+    # デバッグ用
+    st.write("=== payload ===")
+    st.json(payload)
+    res = requests.post(API_URL, json=payload, timeout=5)
+    st.write("▶ status", res.status_code)
+    st.text(res.text)
+
     logger.info("POST %s payload=%s", API_URL, payload)
     try:
         res = requests.post(API_URL, json=payload, timeout=10)
