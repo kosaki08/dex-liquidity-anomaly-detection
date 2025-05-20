@@ -18,14 +18,12 @@ logging.basicConfig(
 
 
 # BentoML predict エンドポイント
-API_URL = st.secrets["BENTO_API_URL"]
+API_URL = os.getenv("BENTO_API_URL")
 
 
-@st.cache_data(ttl=300)
-def fetch_features_for_datetime(data: datetime) -> list[dict]:
-    """Snowflake から指定日時直前最新のプール特徴量を1件取得して返します"""
-    logger.info(f"fetch_features_for_datetime: fetch Snowflake features at {data!r}")
-    conn = connect(
+def get_snowflake_connection():
+    """環境変数を使用してSnowflake接続を作成します。"""
+    return connect(
         user=os.getenv("SNOWFLAKE_USER"),
         password=os.getenv("SNOWFLAKE_PASSWORD"),
         account=os.getenv("SNOWFLAKE_ACCOUNT"),
@@ -34,17 +32,26 @@ def fetch_features_for_datetime(data: datetime) -> list[dict]:
         schema=os.getenv("SNOWFLAKE_SCHEMA"),
         role=os.getenv("SNOWFLAKE_ROLE"),
     )
-    # hour_ts を厳密一致ではなく <= dt の最新レコードを取る
-    query = """
-        SELECT
-          tvl_usd, volume_usd, liquidity, vol_rate_24h, tvl_rate_24h, vol_ma_6h, vol_ma_24h, vol_tvl_ratio 
-        FROM DEX_RAW.RAW.MART_POOL_FEATURES_LABELED
-        WHERE hour_ts <= %s
-        ORDER BY hour_ts DESC
-        LIMIT 1
-    """
-    df = pd.read_sql(query, conn, params=[data])
-    conn.close()
+
+
+@st.cache_data(ttl=300)
+def fetch_features_for_datetime(data: datetime) -> list[dict]:
+    """Snowflake から指定日時直前最新のプール特徴量を1件取得して返します"""
+    logger.info(
+        "fetch_features_for_datetime: fetch Snowflake features at %r",
+        data,
+    )
+    with get_snowflake_connection() as conn:
+        # hour_ts を厳密一致ではなく <= dt の最新レコードを取る
+        query = """
+            SELECT
+              tvl_usd, volume_usd, liquidity, vol_rate_24h, tvl_rate_24h, vol_ma_6h, vol_ma_24h, vol_tvl_ratio
+            FROM DEX_RAW.RAW.MART_POOL_FEATURES_LABELED
+            WHERE hour_ts <= %s
+            ORDER BY hour_ts DESC
+            LIMIT 1
+        """
+        df = pd.read_sql(query, conn, params=[data])
     # DataFrame → dict に変換
     return df.to_dict(orient="records")
 
@@ -57,21 +64,23 @@ def fetch_predictions(data: list[dict]) -> pd.DataFrame:
     # デバッグ用
     st.write("=== payload ===")
     st.json(payload)
-    res = requests.post(API_URL, json=payload, timeout=5)
-    st.write("▶ status", res.status_code)
-    st.text(res.text)
-
     logger.info("POST %s payload=%s", API_URL, payload)
     try:
         res = requests.post(API_URL, json=payload, timeout=10)
-        logger.info("API response status=%d body=%s", res.status_code, res.text[:200])
+        st.write("status:", res.status_code)
+        st.text(res.text)
+        logger.info(
+            "API response status=%d body=%s",
+            res.status_code,
+            res.text[:200],
+        )
 
         # レスポンスを確認
         res.raise_for_status()
         preds = res.json()
 
-        # DataFrame に変換
-        return pd.DataFrame(preds["predictions"])
+        # レスポンスを DataFrame に変換
+        return pd.DataFrame(preds, columns=["label"])
     except Exception as e:
         logger.error("prediction failed: %s", e, exc_info=True)
         st.error(f"データ取得 / 予測に失敗しました: {e}")
@@ -81,6 +90,10 @@ def fetch_predictions(data: list[dict]) -> pd.DataFrame:
 def main():
     st.title("DEX Volume Spike Dashboard")
 
+    if not API_URL:
+        st.error("BENTO_API_URL が見つかりません。 .env または secrets.toml を確認してください。")
+        st.stop()
+
     # デバッグ用
     st.write("🍵 BENTO_API_URL =", os.getenv("BENTO_API_URL"))
 
@@ -88,7 +101,7 @@ def main():
     st.sidebar.header("日時で検索")
     selected_date = st.sidebar.date_input("日付を選択", datetime.now().date())
     selected_time = st.sidebar.time_input("時刻を選択", time(hour=datetime.now().hour))
-    # Combine into timezone-aware UTC
+
     dt_local = datetime.combine(selected_date, selected_time)
     dt_utc = dt_local.astimezone(timezone.utc)
 
