@@ -67,7 +67,7 @@ def fetch_predictions(data: list[dict]) -> pd.DataFrame:
     logger.info("POST %s payload=%s", API_URL, payload)
     try:
         res = requests.post(API_URL, json=payload, timeout=10)
-        st.write("▶ status", res.status_code)
+        st.write("status:", res.status_code)
         st.text(res.text)
         logger.info(
             "API response status=%d body=%s",
@@ -79,8 +79,8 @@ def fetch_predictions(data: list[dict]) -> pd.DataFrame:
         res.raise_for_status()
         preds = res.json()
 
-        # DataFrame に変換
-        return pd.DataFrame(preds["predictions"])
+        # レスポンスを DataFrame に変換
+        return pd.DataFrame(preds, columns=["label"])
     except Exception as e:
         logger.error("prediction failed: %s", e, exc_info=True)
         st.error(f"データ取得 / 予測に失敗しました: {e}")
