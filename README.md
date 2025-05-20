@@ -15,7 +15,7 @@
 - Snowflake RAW/COPY
 - dbt Staging / Mart モデル
 - Isolation Forest 初回学習 & MLflow 登録
-- 週次再学習 DAG（`retrain_iforest`）
+- 週次再学習 DAG（`retrain_isolation_forest`）
 - 毎時推論 DAG（`predict_pool_iforest`）
 - BentoML API & Streamlit ダッシュボード
 - CI/CD（GitHub Actions）ワークフロー
@@ -47,7 +47,7 @@
 │  └ Sushiswap  │                 │ dbt run
 └───────────────┘                 ▼
                            ┌─────────────────┐
-                           │ retrain_iforest │  @weekly retrain  ← train_iforest.py
+                           │ retrain_isolation_forest │  @weekly retrain  ← train_iforest.py
                            └──────┬──────────┘
                                   │ model: volume_spike_iforest (Production)
                                   ▼
@@ -143,7 +143,7 @@ dbt build
 - 初回／週次再学習
 
 ```bash
-docker compose exec airflow airflow dags trigger retrain_iforest
+docker compose exec airflow airflow dags trigger retrain_isolation_forest
 ```
 
 - 毎時推論
@@ -156,7 +156,7 @@ docker compose exec airflow airflow dags trigger predict_pool_iforest
 
 ```bash
 # ローカルで実行
-bentoml serve service:svc
+bentoml serve services.volume_spike_service:PoolIForestService
 
 # または Cloud Run にデプロイ
 make deploy-to-cloud-run
@@ -183,7 +183,7 @@ streamlit run app/streamlit_app.py
 ├── dags/                          # Airflow DAG 本体
 │   ├── dex_pipeline.py            # メイン ETL（Graph → Snowflake）
 │   ├── predict_pool_iforest.py    # 毎時推論 & Slack 通知
-│   ├── retrain_iforest.py         # 週次再学習
+│   ├── retrain_isolation_forest.py         # 週次再学習
 │   └── check_snowflake_connection.py
 │
 ├── scripts/                       # Python ユーティリティ
@@ -233,7 +233,7 @@ streamlit run app/streamlit_app.py
    dbt で Staging → Mart（`mart_pool_features_labeled`）モデルをビルド
 4. モデル学習
    - 初期学習: `train_iforest.py` による直近 30 日バッチ学習
-   - 週次再学習: Airflow DAG (`retrain_iforest`) で最新データを再学習・MLflow へログ
+   - 週次再学習: Airflow DAG (`retrain_isolation_forest`) で最新データを再学習・MLflow へログ
 5. 異常検知
    Airflow DAG (`predict_pool_iforest`) で毎時最新データを Isolation Forest モデルでスコアリングし、閾値超過時は Slack へ通知
 6. 配信 & 可視化
@@ -244,7 +244,7 @@ streamlit run app/streamlit_app.py
 
 ### 異常検知
 
-- 教師あり二値分類: Isolation Forest による volume-spike 検出
+- 教師なし二値分類: Isolation Forest による volume-spike 検出
 - ラベル生成: Mart モデル内でプールごとの 90th percentile を閾値とした教師ラベル (`y`) を自動生成
 - 毎時推論: 最新データをスコアリングし、スコア ≥ 閾値 のプールを Slack へ通知
 
@@ -296,7 +296,7 @@ streamlit run app/streamlit_app.py
 6. **Isolation Forest モデル初期学習**
 
    ```bash
-   airflow dags trigger retrain_iforest
+   airflow dags trigger retrain_isolation_forest
    ```
 
 7. **毎時推論**

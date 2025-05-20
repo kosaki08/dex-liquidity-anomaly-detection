@@ -117,7 +117,7 @@ def main():
             st.dataframe(df_pred)
 
     else:
-        st.info("異常度を確認」ボタンを押してください")
+        st.info("「異常度を確認」ボタンを押してください")
 
 
 if __name__ == "__main__":
