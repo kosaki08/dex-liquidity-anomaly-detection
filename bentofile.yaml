@@ -1,4 +1,4 @@
-service: "services.volume_spike_service:service"
+service: "services.volume_spike_service:PoolIForestService"
 
 include:
   - "services/**/*.py"
