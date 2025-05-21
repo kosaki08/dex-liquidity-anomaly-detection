@@ -43,9 +43,14 @@ module "secrets" {
   project_id = local.project_id
 
   accessors = {
-    # Streamlit SA へ snowflake-pass / snowflake-user の accessor を付与
-    "snowflake-pass" = [module.service_accounts.emails["streamlit"]]
-    "snowflake-user" = [module.service_accounts.emails["streamlit"]]
+    # Streamlit SA へ認証情報の accessor を付与
+    "snowflake-pass"      = [module.service_accounts.emails["streamlit"]]
+    "snowflake-user"      = [module.service_accounts.emails["streamlit"]]
+    "snowflake-account"   = [module.service_accounts.emails["streamlit"]]
+    "snowflake-warehouse" = [module.service_accounts.emails["streamlit"]]
+    "snowflake-database"  = [module.service_accounts.emails["streamlit"]]
+    "snowflake-schema"    = [module.service_accounts.emails["streamlit"]]
+    "snowflake-role"      = [module.service_accounts.emails["streamlit"]]
 
     # Bento SA へ mlflow-token の accessor を付与
     "mlflow-token" = [module.service_accounts.emails["bento"]]
@@ -112,14 +117,13 @@ module "cloud_run_streamlit" {
   }
 
   secret_env_vars = {
-    SNOWFLAKE_PASSWORD = {
-      secret  = "snowflake-pass"
-      version = "latest"
-    }
-    SNOWFLAKE_USER = {
-      secret  = "snowflake-user"
-      version = "latest"
-    }
+    SNOWFLAKE_PASSWORD  = { secret = "snowflake-pass", version = "latest" }
+    SNOWFLAKE_USER      = { secret = "snowflake-user", version = "latest" }
+    SNOWFLAKE_ACCOUNT   = { secret = "snowflake-account", version = "latest" }
+    SNOWFLAKE_WAREHOUSE = { secret = "snowflake-warehouse", version = "latest" }
+    SNOWFLAKE_DATABASE  = { secret = "snowflake-database", version = "latest" }
+    SNOWFLAKE_SCHEMA    = { secret = "snowflake-schema", version = "latest" }
+    SNOWFLAKE_ROLE      = { secret = "snowflake-role", version = "latest" }
   }
 
   depends_on = [
