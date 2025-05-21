@@ -20,12 +20,6 @@ variable "vpc_connector_name" {
   default     = "serverless-conn"
 }
 
-variable "ip_cidr_range" {
-  description = "VPC Access Connector に割り当てる IP CIDR 範囲"
-  type        = string
-  default     = "10.8.0.0/28"
-}
-
 variable "subnet_ip_cidr_range" {
   description = "サブネットに割り当てる /24 などの CIDR"
   type        = string

@@ -18,6 +18,7 @@ sa-key.json
 data/
 mlruns/
 profiles/
+__pycache__/
 
 # dbt, Terraform キャッシュ
 target/
