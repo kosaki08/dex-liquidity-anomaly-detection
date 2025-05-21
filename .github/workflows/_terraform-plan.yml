@@ -46,13 +46,32 @@ jobs:
       - name: Format Check
         run: terraform -chdir=infra fmt -check
 
-      # 7) TFLint & TFsec の実行
-      - name: Lint & Security Scan
-        run: |
-          tflint --chdir infra
-          tfsec infra
+      # 7) TFLint のセットアップ
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: v0.51.1
 
-      # 8) Terraform Plan の実行
+      # 8) TFLint の初期化
+      - name: Init TFLint
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # 9) TFLint の実行
+      - name: Run TFLint
+        run: tflint --chdir infra
+
+      # 10) Trivy IaC スキャン
+      - name: Run Trivy IaC scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: "config"
+          scan-ref: "./infra"
+          severity: "HIGH,CRITICAL"
+          output: trivy-scan-result.txt
+          exit-code: "1"
+
+      # 11) Terraform Plan の実行
       - name: Terraform Plan
         id: plan
         run: |
@@ -61,7 +80,7 @@ jobs:
             -out=tfplan || \
             [ $? -eq 2 ] || exit 1
 
-      # 9) PR へ Plan コメント
+      # 12) PR へ Plan コメント
       - name: Comment plan to PR
         if: github.event_name == 'pull_request'
         uses: robburger/terraform-pr-commenter@v1

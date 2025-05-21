@@ -17,5 +17,4 @@ def build_sushiswap_fetcher() -> BaseFetcher:
     endpoint: str = cfg["endpoint_template"].format(
         api_key=cfg["api_key"], subgraph_id=cfg["subgraph_id"]
     )
-    headers: Dict[str, str] = {"Authorization": f"Bearer {cfg['api_key']}"}
-    return BaseFetcher("sushiswap", endpoint, _SUSHI_QUERY, cfg["page_size"], headers)
+    return BaseFetcher("sushiswap", endpoint, _SUSHI_QUERY, cfg["page_size"])
