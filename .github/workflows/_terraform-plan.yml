@@ -46,21 +46,13 @@ jobs:
       - name: Format Check
         run: terraform -chdir=infra fmt -check
 
-      # 7) tflint & tfsec のインストール
-      - name: Install tflint & tfsec
-        run: |
-          # tflint
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-          # tfsec
-          curl -sSL https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
-
-      # 8) TFLint & TFsec の実行
+      # 7) TFLint & TFsec の実行
       - name: Lint & Security Scan
         run: |
           tflint --chdir infra
           tfsec infra
 
-      # 9) Terraform Plan の実行
+      # 8) Terraform Plan の実行
       - name: Terraform Plan
         id: plan
         run: |
@@ -68,3 +60,14 @@ jobs:
             -lock-timeout=300s -no-color -detailed-exitcode \
             -out=tfplan || \
             [ $? -eq 2 ] || exit 1
+
+      # 9) PR へ Plan コメント
+      - name: Comment plan to PR
+        if: github.event_name == 'pull_request'
+        uses: robburger/terraform-pr-commenter@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          commenter_type: plan
+          commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
+          commenter_exitcode: ${{ steps.plan.outputs.exitcode }}
