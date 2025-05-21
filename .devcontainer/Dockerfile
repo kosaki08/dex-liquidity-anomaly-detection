@@ -24,9 +24,5 @@ RUN curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_
   SNOWSQL_DEST=/usr/local/bin SNOWSQL_LOGIN_SHELL=/dev/null bash snowsql-1.2.26-linux_x86_64.bash -batch || true && \
   rm snowsql-1.2.26-linux_x86_64.bash
 
-# ---------- Node.js ----------
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-  && apt-get install -y nodejs
-
 # ---------- vscode ユーザーに切り替え ----------
 USER vscode
