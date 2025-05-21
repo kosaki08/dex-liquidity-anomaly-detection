@@ -180,10 +180,11 @@ resource "google_composer_environment" "composer" {
 
       # 追加 PyPI パッケージ
       pypi_packages = {
-        "dbt-core"      = "~=1.9"
-        "dbt-snowflake" = "~=1.9"
-        "mlflow"        = "~=2.22"
-        "bentoml"       = "~=1.4"
+        "apache-airflow-providers-snowflake" = "~=5.3"
+        "dbt-core"                           = "~=1.9"
+        "dbt-snowflake"                      = "~=1.9"
+        "mlflow"                             = "~=2.22"
+        "bentoml"                            = "~=1.4"
       }
     }
   }
