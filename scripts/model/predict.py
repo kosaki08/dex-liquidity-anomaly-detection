@@ -6,19 +6,16 @@ from snowflake.connector import connect
 
 
 def load_latest_model_from_registry(model_name: str, stage: str) -> None:
-    """
-    モデルを Registry からロード
-    """
-    # BentoML からモデルをランナーとしてロード
-    runner = bentoml.sklearn.get(model_name + ":" + stage).to_runner()
-    runner.init_local()  # Runner を初期化
-    return
+    """Registry から最新モデルを取得してローカルにキャッシュ"""
+    bentoml.sklearn.get(f"{model_name}:{stage}")
 
 
-def score_latest_row(threshold: float) -> dict:
-    """
-    最新のデータを取得して予測
-    """
+def score_latest_row(
+    threshold: float,
+    model_name: str = "pool_iforest",
+    stage: str = "Production",
+) -> dict:
+    """最新のデータを取得して IsolationForest で予測"""
     # Snowflake から最新 1 行を取得
     conn = connect(
         user=os.getenv("SNOWFLAKE_USER"),
@@ -40,7 +37,10 @@ def score_latest_row(threshold: float) -> dict:
 
     # 特徴量だけ選択
     X = df.drop(columns=["dex", "pool_id", "hour_ts", "y"], errors="ignore")
-    runner = bentoml.runner
+
+    runner = bentoml.sklearn.get(f"{model_name}:{stage}").to_runner()
+    runner.init_local()
+
     # IsolationForest: 予測は anomaly スコア
     scores = runner.run(X)
     score = float(-scores[0])  # 大きいほど異常
