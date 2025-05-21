@@ -165,7 +165,7 @@ resource "google_composer_environment" "composer" {
     # ネットワーク設定
     node_config {
       network         = module.network.network_self_link
-      subnetwork      = module.network.private_subnet_self_link
+      subnetwork      = module.network.subnetwork_self_link
       service_account = google_service_account.composer.email
     }
 

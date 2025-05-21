@@ -23,11 +23,13 @@ resource "google_compute_subnetwork" "private" {
 
 # 3) Serverless VPC Access Connector
 resource "google_vpc_access_connector" "connector" {
-  project       = var.project_id
-  name          = var.vpc_connector_name
-  region        = var.region
-  network       = google_compute_network.vpc.name
-  ip_cidr_range = var.connector_ip_cidr_range
+  project        = var.project_id
+  name           = var.vpc_connector_name
+  region         = var.region
+  network        = google_compute_network.vpc.name
+  ip_cidr_range  = var.connector_ip_cidr_range
+  min_throughput = 300
+  max_throughput = 600
 }
 
 # 4) インターネットへのアウトバウンドを許可
