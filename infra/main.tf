@@ -153,3 +153,43 @@ module "cloud_run_mlflow" {
     module.artifact_registry,
   ]
 }
+
+# Composer
+resource "google_composer_environment" "composer" {
+  provider = google-beta
+  name     = "dex-airflow-${terraform.workspace}" # dex-airflow-dev / dex-airflow-prod
+  project  = local.project_id
+  region   = local.region # asia-northeast1
+
+  config {
+    # ネットワーク設定
+    node_config {
+      network         = module.network.network_self_link
+      subnetwork      = module.network.private_subnet_self_link
+      service_account = google_service_account.composer.email
+    }
+
+    # ソフトウェア設定
+    software_config {
+      image_version = var.composer_version
+
+      # DAG で参照する環境変数
+      env_variables = {
+        MLFLOW_TRACKING_URI = module.cloud_run_mlflow.url
+      }
+
+      # 追加 PyPI パッケージ
+      pypi_packages = {
+        "dbt-core"      = "~=1.9"
+        "dbt-snowflake" = "~=1.9"
+        "mlflow"        = "~=2.22"
+        "bentoml"       = "~=1.4"
+      }
+    }
+  }
+
+  depends_on = [
+    google_project_iam_member.composer_sa_worker_role,
+    google_project_iam_member.composer_run_invoker
+  ]
+}

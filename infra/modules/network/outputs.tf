@@ -7,3 +7,8 @@ output "connector_id" {
   description = "Serverless VPC Access Connector の ID"
   value       = google_vpc_access_connector.connector.id
 }
+
+output "private_subnet_self_link" {
+  description = "作成した VPC の private サブネットの self_link"
+  value       = google_compute_subnetwork.private.self_link
+}

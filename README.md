@@ -30,7 +30,7 @@
 
 **🚧 開発中**
 
-- Cloud Composer 2（dev 環境）への Airflow DAG デプロイ
+- Cloud Composer 3（dev 環境）への Airflow DAG デプロイ
 - 権限制御 (IAM 最小権限ポリシー) の細分化
 - EDA Notebook の整備＆リポジトリへの追加
 
