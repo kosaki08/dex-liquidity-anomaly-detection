@@ -48,8 +48,8 @@ jobs:
             pip install ruff
             ruff check .
 
-            echo "🔎 pytest (allow none)"
-            pytest || true
+            echo "🔎 pytest"
+            pytest -q
 
             echo "🏗️ dbt deps / parse"
             export DBT_PROFILES_DIR=ci_profiles
