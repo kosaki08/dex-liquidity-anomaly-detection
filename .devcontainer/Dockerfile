@@ -21,7 +21,7 @@ RUN poetry config virtualenvs.create false \
 # ---------- SnowSQL インストール ----------
 RUN curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.26-linux_x86_64.bash && \
   chmod 755 snowsql-1.2.26-linux_x86_64.bash && \
-  SNOWSQL_DEST=/usr/local/bin SNOWSQL_LOGIN_SHELL=/dev/null bash snowsql-1.2.26-linux_x86_64.bash -batch || true && \
+  SNOWSQL_DEST=/usr/local/bin SNOWSQL_LOGIN_SHELL=/dev/null bash snowsql-1.2.26-linux_x86_64.bash -batch || { cat snowsql*.log; exit 1; } && \
   rm snowsql-1.2.26-linux_x86_64.bash
 
 # ---------- vscode ユーザーに切り替え ----------
