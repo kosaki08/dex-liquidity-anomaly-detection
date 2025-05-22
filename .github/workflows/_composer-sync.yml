@@ -28,13 +28,23 @@ jobs:
 
       # 4) Composer バケット名を取得
       - id: bucket
+        shell: bash
         run: |
-          BUCKET=$(gcloud composer environments describe dex-airflow-${{ inputs.env }} \
+          set -euo pipefail
+          ENV=${{ inputs.env }}
+          BUCKET=$(gcloud composer environments describe dex-airflow-${ENV} \
             --location asia-northeast1 \
-            --format='value(config.dagGcsPrefix)' | cut -d'/' -f3)
-          echo "bucket=$BUCKET" >> "$GITHUB_OUTPUT"
+            --format="get(config.dagGcsPrefix)" | awk -F/ '{print $(NF-1)}')
+          # 空なら即エラー
+          if [[ -z "$BUCKET" ]]; then
+            echo "::error::BUCKET is empty — check ENV/location"
+            exit 1
+          fi
+          echo "bucket=$BUCKET"  >> "$GITHUB_OUTPUT"
+          echo "BUCKET=$BUCKET"  >> "$GITHUB_ENV"
 
       # 5) DAG 同期
       - name: Sync DAGs
         run: |
-          gsutil -m rsync -r -d dags/ gs://${{ steps.bucket.outputs.bucket }}/dags
+          set -euo pipefail
+          gsutil -m rsync -r -d dags/ gs://$BUCKET/dags
