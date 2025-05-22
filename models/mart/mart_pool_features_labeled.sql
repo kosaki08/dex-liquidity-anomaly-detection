@@ -1,7 +1,9 @@
 {{ 
   config(
-    materialized = 'incremental',
-    unique_key   = ['pool_id', 'hour_ts']
+    materialized            = 'incremental',
+    unique_key              = ['pool_id', 'hour_ts'],
+    incremental_strategy    = 'merge',
+    invalidate_hard_deletes = true
   ) 
 }}
 

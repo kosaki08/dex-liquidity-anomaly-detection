@@ -1,16 +1,13 @@
 import logging
 import os
+from typing import Final
 
 import bentoml
 import mlflow
 import pandas as pd
 from mlflow.tracking import MlflowClient
 
-from scripts.logging_config import setup_logging
-
-setup_logging()
-
-logger = logging.getLogger("pool_iforest")
+logger: Final = logging.getLogger(__name__)
 
 
 @bentoml.service(resources={"cpu": "2"}, traffic={"timeout": 60})
