@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ENV: dev
+      ENV: ${{ github.event.inputs.workspace || 'dev' }}
       PROJECT_ID: ${{ secrets.PROJECT_ID }}
       TF_SA_EMAIL: ${{ secrets.TF_SA_EMAIL }}
       ARTIFACTS_BUCKET: ${{ secrets.ARTIFACTS_BUCKET }}

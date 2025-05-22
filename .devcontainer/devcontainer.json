@@ -8,11 +8,14 @@
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
     "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
-    "ghcr.io/eitsupi/devcontainer-features/duckdb-cli:1": {},
+    "ghcr.io/eitsupi/devcontainer-features/duckdb-cli:1": {
+      "VERSION": "1.2.2"
+    },
     "ghcr.io/devcontainers/features/terraform:1": {
       "tflint": "latest",
       "installTFsec": true
-    }
+    },
+    "ghcr.io/duduribeiro/devcontainer-features/tmux:1": {}
   },
   "forwardPorts": [
     8080, // Airflow Web UI

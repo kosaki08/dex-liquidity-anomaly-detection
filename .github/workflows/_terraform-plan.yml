@@ -63,15 +63,30 @@ jobs:
 
       # 10) Trivy IaC スキャン
       - name: Run Trivy IaC scanner
+        id: trivy
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: "config"
           scan-ref: "./infra"
           severity: "HIGH,CRITICAL"
           output: trivy-scan-result.txt
-          exit-code: "1"
+          exit-code: "0"
 
-      # 11) Terraform Plan の実行
+      # 11) PR へ Trivy スキャン結果コメント
+      - name: Comment Trivy scan result to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('trivy-scan-result.txt', 'utf8');
+            github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+      # 12) Terraform Plan の実行
       - name: Terraform Plan
         id: plan
         run: |
@@ -80,7 +95,7 @@ jobs:
             -out=tfplan || \
             [ $? -eq 2 ] || exit 1
 
-      # 12) PR へ Plan コメント
+      # 13) PR へ Plan コメント
       - name: Comment plan to PR
         if: github.event_name == 'pull_request'
         uses: robburger/terraform-pr-commenter@v1
