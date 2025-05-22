@@ -5,6 +5,7 @@ name: "Terraform Plan (dev)"
 permissions:
   contents: read # ソースチェックアウト用
   id-token: write # OIDC トークン発行用
+  pull-requests: write # コメント用
 
 on:
   pull_request:

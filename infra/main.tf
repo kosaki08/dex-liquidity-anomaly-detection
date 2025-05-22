@@ -8,14 +8,6 @@ module "project_services" {
   version = "~> 14.0"
 
   project_id = local.project_id
-  activate_apis = [
-    "cloudresourcemanager.googleapis.com",
-    "artifactregistry.googleapis.com",
-    "run.googleapis.com",
-    "vpcaccess.googleapis.com",
-    "iamcredentials.googleapis.com",
-    "secretmanager.googleapis.com",
-  ]
 }
 
 # VPC ネットワーク
@@ -27,6 +19,10 @@ module "network" {
   vpc_connector_name      = "serverless-conn-${local.env}"
   subnet_ip_cidr_range    = "10.9.0.0/24"
   connector_ip_cidr_range = "10.8.0.0/28"
+
+  depends_on = [
+    google_project_service.enabled["compute.googleapis.com"]
+  ]
 }
 
 # サービスアカウント
@@ -35,6 +31,10 @@ module "service_accounts" {
   project_id = local.project_id
   sa_names   = ["bento", "streamlit", "airflow"]
   env        = local.env
+
+  depends_on = [
+    google_project_service.enabled["iamcredentials.googleapis.com"]
+  ]
 }
 
 # Secret モジュール
@@ -55,6 +55,10 @@ module "secrets" {
     # Bento SA へ mlflow-token の accessor を付与
     "mlflow-token" = [module.service_accounts.emails["bento"]]
   }
+
+  depends_on = [
+    google_project_service.enabled["secretmanager.googleapis.com"]
+  ]
 }
 
 # Artifact Registry
@@ -66,6 +70,10 @@ module "artifact_registry" {
   location      = local.region
   format        = "DOCKER"
   repository_id = "portfolio-docker-${local.env}" # dev|prod
+
+  depends_on = [
+    google_project_service.enabled["artifactregistry.googleapis.com"]
+  ]
 }
 
 # BentoML API
@@ -79,12 +87,6 @@ module "cloud_run_bento" {
   container_port        = 3000
   service_account_email = module.service_accounts.emails["bento"]
 
-
-  depends_on = [
-    module.artifact_registry,
-    module.secrets
-  ]
-
   env_vars = {
     MLFLOW_TRACKING_URI = module.cloud_run_mlflow.url
   }
@@ -95,6 +97,12 @@ module "cloud_run_bento" {
       version = "latest"
     }
   }
+
+  depends_on = [
+    google_project_service.enabled["run.googleapis.com"],
+    module.artifact_registry,
+    module.secrets
+  ]
 }
 
 # Streamlit ダッシュボード
@@ -107,7 +115,7 @@ module "cloud_run_streamlit" {
   container_port = 8501
 
   # VPC アクセスコネクタ
-  vpc_connector = module.network.connector_id
+  vpc_connector = null
 
   # サービスアカウントを指定
   service_account_email = module.service_accounts.emails["streamlit"]
@@ -142,7 +150,7 @@ module "cloud_run_mlflow" {
   container_port = 5000
   memory         = "1Gi"
 
-  vpc_connector = module.network.connector_id
+  vpc_connector = null
 
   env_vars = {
     ARTIFACT_ROOT        = "gs://${local.artifacts_bucket}/mlflow-artifacts"
@@ -190,6 +198,9 @@ resource "google_composer_environment" "composer" {
   }
 
   depends_on = [
+    google_project_service.enabled["composer.googleapis.com"],
+    google_project_service.enabled["compute.googleapis.com"], # VPC / GCE 下回り
+    google_project_service.enabled["run.googleapis.com"],     # DAG から Cloud Run 呼び出し許可 (invoker設定)
     google_project_iam_member.composer_sa_worker_role,
     google_project_iam_member.composer_run_invoker
   ]

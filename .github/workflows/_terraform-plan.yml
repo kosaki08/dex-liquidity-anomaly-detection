@@ -78,9 +78,15 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const fs = require('fs');
-            const body = fs.readFileSync('trivy-scan-result.txt', 'utf8');
-            github.rest.issues.createComment({
+            const fs   = require('fs');
+            let body = fs.readFileSync('trivy-scan-result.txt', 'utf8').trim();
+
+            // 本文が空の場合
+            if (!body) {
+              body = 'Trivy scan: 検出なし🎉';
+            }
+
+            await github.rest.issues.createComment({
               ...context.repo,
               issue_number: context.issue.number,
               body,
