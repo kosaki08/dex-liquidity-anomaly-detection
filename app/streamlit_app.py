@@ -2,13 +2,14 @@ import logging
 import os
 import sys
 from datetime import datetime, time, timezone
+from typing import Final
 
 import pandas as pd
 import requests
 import streamlit as st
 from snowflake.connector import connect
 
-logger = logging.getLogger(__name__)
+logger: Final = logging.getLogger(__name__)
 
 logging.basicConfig(
     stream=sys.stdout,
