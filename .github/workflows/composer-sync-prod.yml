@@ -1,0 +1,21 @@
+# prod への DAG 同期用
+name: Sync DAGs to Composer (prod)
+
+# パーミッション設定
+permissions:
+  contents: read # ソースチェックアウト用
+  id-token: write # OIDC トークン発行用
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dags/**"
+  workflow_dispatch: # UI から手動トリガー可能
+
+jobs:
+  call-sync:
+    uses: ./.github/workflows/_composer-sync.yml
+    with:
+      env: prod
+    secrets: inherit
