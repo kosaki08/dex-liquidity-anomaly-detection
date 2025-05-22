@@ -104,10 +104,10 @@ jobs:
       # 13) PR へ Plan コメント
       - name: Comment plan to PR
         if: github.event_name == 'pull_request'
-        uses: robburger/terraform-pr-commenter@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: borchero/terraform-plan-comment@v2
         with:
-          commenter_type: plan
-          commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
-          commenter_exitcode: ${{ steps.plan.outputs.exitcode }}
+          token: ${{ github.token }}
+          planfile: tfplan
+          working-directory: infra
+          header: "Terraform Plan (${{env.TF_WORKSPACE }})"
+          skip-empty: true # 変更なしならコメントしない
