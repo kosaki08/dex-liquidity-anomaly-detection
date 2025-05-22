@@ -1,0 +1,40 @@
+name: _composer-sync
+
+on:
+  workflow_call:
+    inputs:
+      env: { required: true, type: string } # dev / prod を渡す
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) リポジトリのチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2) GCP 認証
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/${{ secrets.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider
+          service_account: tf-svc@${{ secrets.PROJECT_ID }}.iam.gserviceaccount.com
+          audience: https://github.com/${{ github.repository }}
+
+      # 3) gcloud CLI をセットアップ
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.PROJECT_ID }}
+
+      # 4) Composer バケット名を取得
+      - id: bucket
+        run: |
+          BUCKET=$(gcloud composer environments describe dex-airflow-${{ inputs.env }} \
+            --location asia-northeast1 \
+            --format='value(config.dagGcsPrefix)' | cut -d'/' -f3)
+          echo "bucket=$BUCKET" >> "$GITHUB_OUTPUT"
+
+      # 5) DAG 同期
+      - name: Sync DAGs
+        run: |
+          gsutil -m rsync -r -d dags/ gs://${{ steps.bucket.outputs.bucket }}/dags

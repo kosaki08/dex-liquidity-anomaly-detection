@@ -1,7 +1,8 @@
 {{ config(
-    materialized = 'table',
-    unique_key   = ['pool_id', 'hour_ts'],
-    incremental_strategy = 'delete+insert'
+    materialized            = 'table',
+    unique_key              = ['pool_id', 'hour_ts'],
+    incremental_strategy    = 'merge',
+    invalidate_hard_deletes = true
 ) }}
 
 with hourly as (

@@ -5,7 +5,9 @@ from airflow.models.variable import Variable
 from airflow.providers.standard.operators.python import PythonOperator
 from airflow.providers.standard.sensors.external_task import ExternalTaskSensor
 
-from scripts.model.predict import load_latest_model_from_registry, score_latest_row
+from scripts.model.import_iforest_from_mlflow import import_iforest
+from scripts.model.predict import (load_latest_model_from_registry,
+                                   score_latest_row)
 
 with DAG(
     dag_id="predict_pool_iforest",
@@ -25,6 +27,12 @@ with DAG(
         timeout=600,
         poke_interval=60,
         mode="reschedule",
+    )
+
+    import_model = PythonOperator(
+        task_id="import_iforest",
+        python_callable=import_iforest,
+        op_kwargs={"stage": "Production"},
     )
 
     # Isolation Forest モデルをロード
@@ -47,4 +55,5 @@ with DAG(
     )
 
     # 依存関係
-    wait_for_mart >> load_model >> score
+    wait_for_mart >> import_model >> load_model >> score
+
