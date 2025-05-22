@@ -48,7 +48,7 @@ with DAG(
         task_id="dbt_run_mart",
         bash_command=(
             "cd /opt/airflow/project && "
-            "dbt run --target sf -s +mart_pool_features_labeled --profiles-dir profiles --full-refresh"
+            "dbt build --target sf -s mart_pool_features_labeled --profiles-dir profiles"
         ),
     )
 
