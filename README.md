@@ -100,6 +100,11 @@
 - EDA: DuckDB
 - CI/CD: GitHub Actions
 
+### IaC
+
+- **Terraform** – Cloud Run / Secret Manager / VPC / IAM / Composer / GCS
+- 詳細手順・環境分岐については [`infra/README.md`](./infra/README.md) に記載
+
 ## 環境構築
 
 ### 利用サービス等

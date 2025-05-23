@@ -40,6 +40,8 @@ jobs:
 
       # 5) Terraform の検証
       - name: Validate Terraform
+        env:
+          TF_VAR_env_suffix: ${{ inputs.workspace }}
         run: terraform -chdir=infra validate
 
       # 6) Terraform のフォーマットチェック
@@ -98,6 +100,7 @@ jobs:
         run: |
           terraform -chdir=infra plan \
             -lock-timeout=300s -no-color -detailed-exitcode \
+            -var "env_suffix=${{ inputs.workspace }}" \
             -out=tfplan || [ $? -eq 2 ] || exit 1
 
       # 13) PR へ Plan コメント
