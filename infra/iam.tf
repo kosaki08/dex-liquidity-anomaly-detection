@@ -36,3 +36,10 @@ resource "google_project_iam_member" "composer_run_invoker" {
   role    = "roles/run.invoker"
   member  = "serviceAccount:service-${data.google_project.project.number}@cloudcomposer-accounts.iam.gserviceaccount.com"
 }
+
+# MLflow 用 GCS バケットにアクセス権限を付与
+resource "google_storage_bucket_iam_member" "artifacts_writer_mlflow" {
+  bucket = google_storage_bucket.artifacts.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${module.service_accounts.emails["bento"]}" # MLflow 用 SA
+}
