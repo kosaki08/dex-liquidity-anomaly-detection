@@ -205,3 +205,38 @@ resource "google_composer_environment" "composer" {
     google_project_iam_member.composer_run_invoker
   ]
 }
+
+#  MLflow / データアーティファクト用 GCS バケット
+resource "google_storage_bucket" "artifacts" {
+  name     = local.artifacts_bucket
+  location = local.region
+  project  = local.project_id
+
+  labels = {
+    env   = local.env # dev / prod
+    usage = "mlflow-artifacts"
+  }
+
+  # バケット単位の IAM に統一
+  uniform_bucket_level_access = true
+
+  # バージョニング
+  # コストが最適化のため「バージョニング＋削除ルール」の両方を有効化
+  versioning {
+    enabled = true
+  }
+
+  # ライフサイクルルール
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+
+    condition {
+      age = 365 # 最新世代を含め 365 日後に削除
+    }
+  }
+
+  # dev 環境の場合は強制的に削除可能に
+  force_destroy = local.env == "dev" ? true : false
+}
