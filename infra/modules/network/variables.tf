@@ -8,6 +8,11 @@ variable "region" {
   type        = string
 }
 
+variable "env_suffix" {
+  description = "環境を区別するサフィックス (dev / prod)"
+  type        = string
+}
+
 variable "network_name" {
   description = "作成する VPC ネットワークの名前"
   type        = string

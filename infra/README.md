@@ -1,99 +1,85 @@
 ## Terraform 構成とワークスペース運用
 
-- すべての Terraform コードは **`infra/`** 配下にまとめ、`terraform.workspace`（dev/prod）で環境ごとに分岐
-- **state の分離** は GCS backend の `prefix = "dex-liquidity"` ＋ワークスペース名で階層化
-- 環境固有の値（project_id, artifacts_bucket など）は **`locals.tf`** で `terraform.workspace == "prod"` を条件に切り替え
+- すべての Terraform コードは **`infra/`** 配下に集約。
+- **実行時の環境 (dev / prod)** は
+  1. `terraform workspace`（= backend の state 階層用）
+  2. CLI 変数 **`-var env_suffix=${WORKSPACE}`** → `local.env_suffix`（= リソース名・IAM 条件切替用）
+     の **２層で判定** します。
+- **state の分離**: `backend.tf` にて
 
-```text
-infra/
-├ backend.tf      ← GCS backend 定義 (prefix 固定)
-├ versions.tf     ← required_providers
-├ providers.tf    ← provider インスタンス設定
-├ variables.tf    ← 変数宣言 (env依存以外)
-├ locals.tf       ← project_id, artifacts_bucket, region の切替
-├ main.tf         ← リソース/モジュール呼び出し
-└ Makefile        ← init/plan/apply をラップ
-```
+  ```hcl
+  prefix = "dex-liquidity/${terraform.workspace}"
+  ```
+
+  とし、work space ごとにディレクトリを分離。
+
+- 環境固有値（`project_id`, `artifacts_bucket` など）は **`locals.tf`** 内で
+
+  ```hcl
+  locals {
+    env_suffix = var.env_suffix != "" ? var.env_suffix : terraform.workspace
+    project_id = local.env_suffix == "prod"
+      ? "portfolio-dex-prod-460122"
+      : "portfolio-dex-dev"
+    # …略…
+  }
+  ```
 
 ## CI/CD ワークフロー
 
-- **feature → dev** PR：`WORKSPACE=dev` で自動 apply + 統合テスト
-- **dev → main (Release PR)**：`WORKSPACE=prod` で plan のみ実行
-- **本番反映**：`workflow_dispatch`（手動）＋`WORKSPACE=prod AUTOAPPROVE=-auto-approve`
+| ブランチ / イベント                   | WORKSPACE | 処理                              | 備考                                             |
+| ------------------------------------- | --------- | --------------------------------- | ------------------------------------------------ |
+| **feature → dev Pull Request**        | `dev`     | `terraform plan` + `apply` (自動) | `-var env_suffix=dev`                            |
+| **dev → main Pull Request (Release)** | `prod`    | `terraform plan` のみ             | `-var env_suffix=prod`                           |
+| **main / workflow_dispatch**          | `prod`    | `terraform apply` (手動)          | `-var env_suffix=prod AUTOAPPROVE=-auto-approve` |
 
-## Terraform 操作 (Makefile ラッパ)
+> GitHub Actions では、既存ステップに
+>
+> ```bash
+> -var "env_suffix=${{ inputs.workspace || env.TF_WORKSPACE }}"
+> ```
+>
+> を付与すれば同期が取れます。
 
-`infra/Makefile` には日常タスクをまとめたターゲットを定義しています。  
-ワークスペース（dev / prod）は `WORKSPACE` 変数で切り替えます。省略時は `dev`になります。
+---
+
+## Makefile での操作
+
+`WORKSPACE` 変数（デフォルト `dev`）を変えるだけで **workspace と env_suffix が連動** します。
 
 ```bash
-# infra ディレクトリで
+# 初期化
+make init                                # terraform init
+make init INIT_FLAGS="-upgrade"          # provider 更新
+make init INIT_FLAGS="-reconfigure"      # backend 変更時
 
-# 1. Provider プラグイン初期化
-make init
+# 検証
+make validate                            # terraform validate -var env_suffix=dev
 
-# 1-1. プラグインを最新版へ更新
-make init INIT_FLAGS="-upgrade -reconfigure"
+# 差分確認
+make plan                                # dev
+make plan WORKSPACE=prod                 # prod
 
-# 2. 変数・構文検証
-make validate
-
-# 3. 差分確認 (dev)
-make plan                            # = make plan WORKSPACE=dev
-
-# 4. 変更反映 (dev)
-make apply WORKSPACE=dev             # プロンプトあり
-make apply WORKSPACE=dev AUTOAPPROVE=-auto-approve  # プロンプト無し
-
-# 5. 差分確認 (prod)
-make plan WORKSPACE=prod
-
-# 6. 変更反映 (prod)
-make apply WORKSPACE=prod            # prod はガード付き
-# or 手動ワークフローで
-make apply WORKSPACE=prod AUTOAPPROVE=-auto-approve
+# 反映
+make apply WORKSPACE=dev                 # プロンプトあり
+make apply WORKSPACE=dev AUTOAPPROVE=-auto-approve
+make apply WORKSPACE=prod                # prod は二重確認ガード
 ```
 
-## Secret のローテーション方法
+---
 
-Snowflake パスワードを更新する場合は以下のコマンドを実行します。
+## Secret のローテーション
 
 ```bash
-echo -n "new_password" \
+echo -n "NEW_PASSWORD" \
   | gcloud secrets versions add snowflake-pass --data-file=-
 ```
 
-## Terraform 操作 (Makefile ラッパ)
+---
 
-`infra/Makefile` には日常タスクをまとめたターゲットを定義しています。  
-ワークスペース（dev / prod）は `WORKSPACE` 変数で切り替えます。省略時は `dev`になります。
+## 今後の拡張予定
 
-```bash
-# 1. Provider 初期化（通常の `terraform init`）
-make init
-
-# 1-1. Provider プラグインを最新版に更新
-make init INIT_FLAGS="-upgrade -reconfigure"
-
-# 1-2. backend 変更時に再初期化 (State 移行や bucket 変更時)
-make init INIT_FLAGS="-reconfigure"
-
-# 2. バリデーション
-make validate
-
-# 3. 差分確認 (dev)
-make plan                   # WORKSPACE=dev がデフォルト
-
-# 4. 変更反映 (dev)
-make apply                  # 自動承認 (-auto-approve) はしていません
-
-# 5. 差分確認 (prod)
-make plan WORKSPACE=prod
-
-# 6. 変更反映 (prod)  ⚠️ yes と入力しないと進まないガード付き
-make apply WORKSPACE=prod
-```
-
-### 今後の拡張
-
-- Composer などのサービスを本番で常時稼働させるタイミングで prod プロジェクトを新規作成する
+- Composer を常時稼働させるタイミングで **prod 専用 GCP プロジェクトを新設**し、
+  `project_id` を locals で切替できるよう変数化を検討。
+- Vertex AI 導入時には **`env_suffix` をそのまま流用**し、
+  Cloud Run ↔︎ Vertex Pipelines のハイブリッド構成を無停止で移行。

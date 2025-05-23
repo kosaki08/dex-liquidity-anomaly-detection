@@ -1,8 +1,11 @@
 TF_DIR := $(CURDIR)
 
-WORKSPACE ?= dev   # 引数が無ければ dev
-AUTOAPPROVE  ?=    # CI で -auto-approve を渡す用
-INIT_FLAGS ?=      # 例: "-upgrade -reconfigure"
+# 引数が無ければ dev
+WORKSPACE ?= dev
+# CI で -auto-approve を渡す用
+AUTOAPPROVE  ?=
+# 例: "-upgrade -reconfigure"
+INIT_FLAGS ?=
 
 ## 内部ヘルパー
 select-workspace:
@@ -26,16 +29,16 @@ init:  ## terraform init $(INIT_FLAGS)
 	cd $(TF_DIR) && terraform init $(INIT_FLAGS)
 
 plan: select-workspace ## terraform plan
-	cd $(TF_DIR) && terraform plan
+	cd $(TF_DIR) && terraform plan -var "env_suffix=$(WORKSPACE)"
 
 validate: select-workspace ## terraform validate
-	cd $(TF_DIR) && terraform validate
+	cd $(TF_DIR) && terraform validate -var "env_suffix=$(WORKSPACE)"
 
 apply: guard-prod select-workspace ## terraform apply $(AUTOAPPROVE)
-	cd $(TF_DIR) && terraform apply $(AUTOAPPROVE)
+	cd $(TF_DIR) && terraform apply $(AUTOAPPROVE) -var "env_suffix=$(WORKSPACE)"
 
 destroy: guard-prod select-workspace ## terraform destroy
-	cd $(TF_DIR) && terraform destroy
+	cd $(TF_DIR) && terraform destroy -var "env_suffix=$(WORKSPACE)"
 
 help:  ## ヘルプを表示
 	@grep -E '^[a-zA-Z_-]+:.*?##' $(MAKEFILE_LIST) | \
