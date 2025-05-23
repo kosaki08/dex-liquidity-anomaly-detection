@@ -30,7 +30,7 @@ jobs:
 
       # 3) Terraform をセットアップ
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3.1.2
         with:
           terraform_version: 1.11.4
 
@@ -98,8 +98,7 @@ jobs:
         run: |
           terraform -chdir=infra plan \
             -lock-timeout=300s -no-color -detailed-exitcode \
-            -out=tfplan || \
-            [ $? -eq 2 ] || exit 1
+            -out=tfplan || [ $? -eq 2 ] || exit 1
 
       # 13) PR へ Plan コメント
       - name: Comment plan to PR
