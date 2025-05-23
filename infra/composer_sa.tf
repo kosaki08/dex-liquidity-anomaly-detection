@@ -1,7 +1,7 @@
 # Composer 専用 SA を用意
 resource "google_service_account" "composer" {
-  account_id   = "composer-${terraform.workspace}"
-  display_name = "Composer SA (${terraform.workspace})"
+  account_id   = "composer-${local.env_suffix}"
+  display_name = "Composer SA (${local.env_suffix})"
 }
 
 # Composer Worker 権限を付与

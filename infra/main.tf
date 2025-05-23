@@ -1,7 +1,3 @@
-locals {
-  env = terraform.workspace
-}
-
 # プロジェクトサービス
 module "project_services" {
   source  = "terraform-google-modules/project-factory/google//modules/project_services"
@@ -15,10 +11,11 @@ module "network" {
   source                  = "./modules/network"
   project_id              = local.project_id
   region                  = local.region
-  network_name            = "dex-network-${local.env}"
-  vpc_connector_name      = "serverless-conn-${local.env}"
+  network_name            = "dex-network-${local.env_suffix}"
+  vpc_connector_name      = "serverless-conn-${local.env_suffix}"
   subnet_ip_cidr_range    = "10.9.0.0/24"
   connector_ip_cidr_range = "10.8.0.0/28"
+  env_suffix              = local.env_suffix
 
   depends_on = [
     google_project_service.enabled["compute.googleapis.com"]
@@ -30,7 +27,7 @@ module "service_accounts" {
   source     = "./modules/service_accounts"
   project_id = local.project_id
   sa_names   = ["bento", "streamlit", "airflow"]
-  env        = local.env
+  env        = local.env_suffix
 
   depends_on = [
     google_project_service.enabled["iamcredentials.googleapis.com"]
@@ -69,7 +66,7 @@ module "artifact_registry" {
   project_id    = local.project_id
   location      = local.region
   format        = "DOCKER"
-  repository_id = "portfolio-docker-${local.env}" # dev|prod
+  repository_id = "portfolio-docker-${local.env_suffix}" # dev|prod
 
   depends_on = [
     google_project_service.enabled["artifactregistry.googleapis.com"]
@@ -80,9 +77,9 @@ module "artifact_registry" {
 module "cloud_run_bento" {
   source                = "./modules/cloud_run"
   project_id            = local.project_id
-  name                  = "bento-api-${local.env}"
+  name                  = "bento-api-${local.env_suffix}"
   location              = local.region
-  image                 = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env}/bento:latest"
+  image                 = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env_suffix}/bento:latest"
   vpc_connector         = module.network.connector_id
   container_port        = 3000
   service_account_email = module.service_accounts.emails["bento"]
@@ -109,9 +106,9 @@ module "cloud_run_bento" {
 module "cloud_run_streamlit" {
   source         = "./modules/cloud_run"
   project_id     = local.project_id
-  name           = "streamlit-${local.env}"
+  name           = "streamlit-${local.env_suffix}"
   location       = local.region
-  image          = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env}/streamlit:${var.image_tag}"
+  image          = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env_suffix}/streamlit:${var.image_tag}"
   container_port = 8501
 
   # VPC アクセスコネクタ
@@ -144,9 +141,9 @@ module "cloud_run_streamlit" {
 module "cloud_run_mlflow" {
   source         = "./modules/cloud_run"
   project_id     = local.project_id
-  name           = "mlflow-${local.env}"
+  name           = "mlflow-${local.env_suffix}"
   location       = local.region
-  image          = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env}/mlflow:${var.image_tag}"
+  image          = "asia-northeast1-docker.pkg.dev/${local.project_id}/portfolio-docker-${local.env_suffix}/mlflow:${var.image_tag}"
   container_port = 5000
   memory         = "1Gi"
 
@@ -165,7 +162,7 @@ module "cloud_run_mlflow" {
 # Composer
 resource "google_composer_environment" "composer" {
   provider = google-beta
-  name     = "dex-airflow-${terraform.workspace}" # dex-airflow-dev / dex-airflow-prod
+  name     = "dex-airflow-${local.env_suffix}" # dex-airflow-dev / dex-airflow-prod
   project  = local.project_id
   region   = local.region # asia-northeast1
 
@@ -213,7 +210,7 @@ resource "google_storage_bucket" "artifacts" {
   project  = local.project_id
 
   labels = {
-    env   = local.env # dev / prod
+    env   = local.env_suffix # dev / prod
     usage = "mlflow-artifacts"
   }
 
@@ -238,5 +235,5 @@ resource "google_storage_bucket" "artifacts" {
   }
 
   # dev 環境の場合は強制的に削除可能に
-  force_destroy = local.env == "dev" ? true : false
+  force_destroy = local.env_suffix == "dev" ? true : false
 }
