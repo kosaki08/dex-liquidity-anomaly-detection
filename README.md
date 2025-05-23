@@ -26,12 +26,11 @@
 - 毎時推論 DAG（`predict_pool_iforest`）
 - BentoML API & Streamlit ダッシュボード
 - CI/CD（GitHub Actions）ワークフロー
-- Terraform でのベースインフラ（Cloud Run / Secret Manager / VPC）
+- Terraform による Cloud Run・Secret Manager・VPC 基盤構築と IAM 権限制御の最適化
 
 **🚧 開発中**
 
 - Cloud Composer 3（dev 環境）への Airflow DAG デプロイ
-- 権限制御 (IAM 最小権限ポリシー) の細分化
 - EDA Notebook の整備＆リポジトリへの追加
 
 **⏳ 実装予定**
