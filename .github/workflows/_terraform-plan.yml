@@ -40,7 +40,9 @@ jobs:
 
       # 5) Terraform の検証
       - name: Validate Terraform
-        run: terraform -chdir=infra validate -var "env_suffix=${{ inputs.workspace }}"
+        env:
+          TF_VAR_env_suffix: ${{ inputs.workspace }}
+        run: terraform -chdir=infra validate
 
       # 6) Terraform のフォーマットチェック
       - name: Format Check
