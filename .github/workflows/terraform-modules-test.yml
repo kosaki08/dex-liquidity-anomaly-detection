@@ -20,7 +20,7 @@ jobs:
 
       # 2) Terraform をセットアップ
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3.1.2
 
       # 3) モジュールのテスト
       - name: Test ${{ matrix.module }}

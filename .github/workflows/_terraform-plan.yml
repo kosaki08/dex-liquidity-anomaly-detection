@@ -30,7 +30,7 @@ jobs:
 
       # 3) Terraform をセットアップ
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3.1.2
         with:
           terraform_version: 1.11.4
 
@@ -78,9 +78,15 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const fs = require('fs');
-            const body = fs.readFileSync('trivy-scan-result.txt', 'utf8');
-            github.rest.issues.createComment({
+            const fs   = require('fs');
+            let body = fs.readFileSync('trivy-scan-result.txt', 'utf8').trim();
+
+            // 本文が空の場合
+            if (!body) {
+              body = 'Trivy scan: 検出なし🎉';
+            }
+
+            await github.rest.issues.createComment({
               ...context.repo,
               issue_number: context.issue.number,
               body,
@@ -92,16 +98,15 @@ jobs:
         run: |
           terraform -chdir=infra plan \
             -lock-timeout=300s -no-color -detailed-exitcode \
-            -out=tfplan || \
-            [ $? -eq 2 ] || exit 1
+            -out=tfplan || [ $? -eq 2 ] || exit 1
 
       # 13) PR へ Plan コメント
       - name: Comment plan to PR
         if: github.event_name == 'pull_request'
-        uses: robburger/terraform-pr-commenter@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: borchero/terraform-plan-comment@v2
         with:
-          commenter_type: plan
-          commenter_input: ${{ format('{0}{1}', steps.plan.outputs.stdout, steps.plan.outputs.stderr) }}
-          commenter_exitcode: ${{ steps.plan.outputs.exitcode }}
+          token: ${{ github.token }}
+          planfile: tfplan
+          working-directory: infra
+          header: "Terraform Plan (${{env.TF_WORKSPACE }})"
+          skip-empty: true # 変更なしならコメントしない
