@@ -2,7 +2,7 @@
 
 ## 関連プロジェクト
 
-- [GCP フルマネージド版レポジトリ](https://github.com/kosaki08/portfolio-dex-vertex-ai)
+- [GCP フルマネージド版レポジトリ](https://github.com/kosaki08/dex-liquidity-anomaly-detection-vertex-ai)
 
 ## 概要
 
