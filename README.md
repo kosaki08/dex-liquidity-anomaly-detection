@@ -1,4 +1,10 @@
-# [WIP] DEX Liquidity Anomaly Detection Pipeline
+# [WIP] DEX Liquidity Anomaly Detection Pipeline On-Premises
+
+## 関連プロジェクト
+
+- [GCP フルマネージド版レポジトリ](https://github.com/kosaki08/portfolio-dex-vertex-ai)
+
+## 概要
 
 分散型取引所（DEX）の流動性データを毎時収集し、Isolation Forest による異常スパイク検知を行うパイプラインです。
 
@@ -7,12 +13,17 @@
 - 週次で Isolation Forest モデルを再学習し、MLflow で管理・BentoML 経由で推論 API 化
 - 毎時間スコアリング
 
+<!--
 ## デモ URL (dev)
+
+BigQuery へ移行中のためコメントアウト
 
 - Streamlit Dashboard
   <https://streamlit-dev-6tqknz3neq-an.a.run.app/>
 - BentoML API
   <https://bento-api-dev-6tqknz3neq-an.a.run.app/predict>
+
+-->
 
 ## 開発ステータス
 
